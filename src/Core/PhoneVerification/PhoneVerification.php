@@ -143,7 +143,7 @@ class PhoneVerification
         [$countryCode, $phoneNumber] = CallingCode::parsePhone($phone);
         if ($countryCode and $phoneNumber) {
             $response = $this->authy->phoneVerificationStatus($phoneNumber, $countryCode);
-            if ($response->ok() and $response->bodyvar('status') !== 'verified') {
+            if ($response->ok() and $response->bodyvar('status') === 'verified') {
                 return true;
             }
         }
