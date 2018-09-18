@@ -15,6 +15,7 @@ use Exception;
 use Flarum\Core\Access\AssertPermissionTrait;
 use Flarum\Core\AuthToken;
 use Flarum\Core\Exception\PermissionDeniedException;
+use Flarum\Core\PhoneVerification\PhoneVerification;
 use Flarum\Core\Support\DispatchEventsTrait;
 use Flarum\Core\User;
 use Flarum\Core\Validator\UserValidator;
@@ -25,11 +26,13 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Contracts\Validation\ValidationException;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Validator;
 use Intervention\Image\ImageManager;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
 use League\Flysystem\MountManager;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class RegisterUserHandler
 {
@@ -62,14 +65,26 @@ class RegisterUserHandler
     private $validatorFactory;
 
     /**
+     * @var TranslatorInterface
+     */
+    protected $translator;
+
+    /**
+     * @var PhoneVerification
+     */
+    protected $phoneVerification;
+
+    /**
      * @param Dispatcher $events
      * @param SettingsRepositoryInterface $settings
      * @param UserValidator $validator
      * @param Application $app
      * @param FilesystemInterface $uploadDir
      * @param Factory $validatorFactory
+     * @param TranslatorInterface $translator
+     * @param PhoneVerification $phoneVerification
      */
-    public function __construct(Dispatcher $events, SettingsRepositoryInterface $settings, UserValidator $validator, Application $app, FilesystemInterface $uploadDir, Factory $validatorFactory)
+    public function __construct(Dispatcher $events, SettingsRepositoryInterface $settings, UserValidator $validator, Application $app, FilesystemInterface $uploadDir, Factory $validatorFactory, TranslatorInterface $translator, PhoneVerification $phoneVerification)
     {
         $this->events = $events;
         $this->settings = $settings;
@@ -77,6 +92,8 @@ class RegisterUserHandler
         $this->app = $app;
         $this->uploadDir = $uploadDir;
         $this->validatorFactory = $validatorFactory;
+        $this->translator = $translator;
+        $this->phoneVerification = $phoneVerification;
     }
 
     /**
@@ -96,43 +113,30 @@ class RegisterUserHandler
             $this->assertAdmin($actor);
         }
 
+        $validator = $this->validator->makeValidator((array)array_get($data, 'attributes'));
+
+        $phone = array_get($data, 'attributes.phone');
+
+        $validator->after(function (Validator $validator) use ($phone) {
+            if ($validator->errors()->isEmpty()) {
+                if (!$this->phoneVerification->status($phone)) {
+                    $validator->errors()->add('phone', $this->translator->trans('core.api.phone_not_verified_message'));
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+
         $username = array_get($data, 'attributes.username');
-        $email = array_get($data, 'attributes.email');
         $password = array_get($data, 'attributes.password');
 
-        // If a valid authentication token was provided as an attribute,
-        // then we won't require the user to choose a password.
-        if (isset($data['attributes']['token'])) {
-            $token = AuthToken::validOrFail($data['attributes']['token']);
-
-            $password = $password ?: str_random(20);
-        }
-
-        $user = User::register($username, $email, $password);
-
-        // If a valid authentication token was provided, then we will assign
-        // the attributes associated with it to the user's account. If this
-        // includes an email address, then we will activate the user's account
-        // from the get-go.
-        if (isset($token)) {
-            foreach ($token->payload as $k => $v) {
-                $user->$k = $v;
-            }
-
-            if (isset($token->payload['email'])) {
-                $user->activate();
-            }
-        }
-
-        if ($actor->isAdmin() && array_get($data, 'attributes.isActivated')) {
-            $user->activate();
-        }
+        $user = User::register($username, $phone, $password);
 
         $this->events->fire(
             new UserWillBeSaved($user, $actor, $data)
         );
-
-        $this->validator->assertValid(array_merge($user->getAttributes(), compact('password')));
 
         if ($avatarUrl = array_get($data, 'attributes.avatarUrl')) {
             $validation = $this->validatorFactory->make(compact('avatarUrl'), ['avatarUrl' => 'url']);
@@ -148,11 +152,9 @@ class RegisterUserHandler
             }
         }
 
-        $user->save();
+        $user->activate();
 
-        if (isset($token)) {
-            $token->delete();
-        }
+        $user->save();
 
         $this->dispatchEventsFor($user, $actor);
 

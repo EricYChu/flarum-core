@@ -11,54 +11,44 @@
 
 namespace Flarum\Forum\Controller;
 
-use DateTime;
-use Flarum\Core\Exception\InvalidConfirmationTokenException;
-use Flarum\Core\PasswordToken;
-use Flarum\Http\Controller\AbstractHtmlController;
-use Illuminate\Contracts\View\Factory;
+use Flarum\Api\Client;
+use Flarum\Http\Controller\ControllerInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Symfony\Component\Translation\TranslatorInterface;
 
-class ResetPasswordController extends AbstractHtmlController
+class ResetPasswordController implements ControllerInterface
 {
     /**
-     * @var Factory
+     * @var Client
      */
-    protected $view;
+    protected $api;
 
     /**
-     * @var TranslatorInterface
+     * @param Client $api
      */
-    protected $translator;
-
-    /**
-     * @param Factory $view
-     */
-    public function __construct(Factory $view, TranslatorInterface $translator)
+    public function __construct(Client $api)
     {
-        $this->view = $view;
-        $this->translator = $translator;
+        $this->api = $api;
     }
 
     /**
      * @param Request $request
-     * @return \Illuminate\Contracts\View\View
-     * @throws InvalidConfirmationTokenException
+     * @return \Illuminate\Contracts\Support\Renderable|\Psr\Http\Message\ResponseInterface
+     * @throws \Exception
      */
-    public function render(Request $request)
+    public function handle(Request $request)
     {
-        $token = array_get($request->getQueryParams(), 'token');
+        $input = $request->getParsedBody();
 
-        $token = PasswordToken::findOrFail($token);
-
-        if ($token->created_at < new DateTime('-1 day')) {
-            throw new InvalidConfirmationTokenException;
+        $controller = 'Flarum\Api\Controller\ResetPasswordController';
+        $actor = $request->getAttribute('actor');
+        $body = ['data' => ['attributes' => $input]];
+        try {
+            $response = $this->api->send($controller, $actor, [], $body);
+        } catch (\Throwable $e) {
+            var_dump($e);
+            throw $e;
         }
 
-        return $this->view->make('flarum::reset')
-            ->with('translator', $this->translator)
-            ->with('passwordToken', $token->id)
-            ->with('csrfToken', $request->getAttribute('session')->get('csrf_token'))
-            ->with('error', $request->getAttribute('session')->get('error'));
+        return $response;
     }
 }

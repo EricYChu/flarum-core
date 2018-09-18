@@ -5,6 +5,7 @@ import Alert from 'flarum/components/Alert';
 import Button from 'flarum/components/Button';
 import LogInButtons from 'flarum/components/LogInButtons';
 import extractText from 'flarum/utils/extractText';
+import callingCodes from 'flarum/utils/callingCodes';
 
 /**
  * The `LogInModal` component displays a modal dialog with a login form.
@@ -55,7 +56,7 @@ export default class LogInModal extends Modal {
 
         <div className="Form Form--centered">
           <div className="Form-group">
-            <input className="FormControl" name="identification" type="text" placeholder={extractText(app.translator.trans('core.forum.log_in.username_or_email_placeholder'))}
+            <input className="FormControl" name="identification" type="text" placeholder={extractText(app.translator.trans('core.forum.log_in.username_or_phone_or_email_placeholder'))}
               bidi={this.identification}
               disabled={this.loading} />
           </div>
@@ -100,28 +101,35 @@ export default class LogInModal extends Modal {
   }
 
   /**
-   * Open the forgot password modal, prefilling it with an email if the user has
+   * Open the forgot password modal, prefilling it with an phone if the user has
    * entered one.
    *
    * @public
    */
   forgotPassword() {
-    const email = this.identification();
-    const props = email.indexOf('@') !== -1 ? {email} : undefined;
+    const phone = this.identification();
+    const props = phone.indexOf('@') !== -1 ? {phone} : undefined;
 
     app.modal.show(new ForgotPasswordModal(props));
   }
 
   /**
-   * Open the sign up modal, prefilling it with an email/username/password if
+   * Open the sign up modal, prefilling it with an phone/username/password if
    * the user has entered one.
    *
    * @public
    */
   signUp() {
     const props = {password: this.password()};
-    const identification = this.identification();
-    props[identification.indexOf('@') !== -1 ? 'email' : 'username'] = identification;
+    const identification = this.identification().trim();
+
+    if (/^(\+?)\d+$/.test(identification)) {
+      let { countryCode, phoneNumber } = callingCodes.parsePhone(identification);
+      props.country_code = countryCode;
+      props.phone_number = phoneNumber;
+    } else if (identification.indexOf('@') === -1) {
+      props.username = identification;
+    }
 
     app.modal.show(new SignUpModal(props));
   }

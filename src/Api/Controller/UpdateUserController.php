@@ -52,8 +52,8 @@ class UpdateUserController extends AbstractResourceController
         $data = array_get($request->getParsedBody(), 'data', []);
 
         // Require the user's current password if they are attempting to change
-        // their own email address.
-        if (isset($data['attributes']['email']) && $actor->id == $id) {
+        // their own email address, phone number or password.
+        if ((isset($data['attributes']['password']) or isset($data['attributes']['email']) or isset($data['attributes']['phone'])) && $actor->id == $id) {
             $password = array_get($request->getParsedBody(), 'meta.password');
 
             if (! $actor->checkPassword($password)) {

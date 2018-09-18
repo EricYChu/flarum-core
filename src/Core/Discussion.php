@@ -22,7 +22,7 @@ use Flarum\Event\DiscussionWasRestored;
 use Flarum\Event\DiscussionWasStarted;
 use Flarum\Event\PostWasDeleted;
 use Flarum\Event\ScopePostVisibility;
-use Flarum\Util\Str;
+use Behat\Transliterator\Transliterator;
 
 /**
  * @property int $id
@@ -455,6 +455,6 @@ class Discussion extends AbstractModel
     protected function setTitleAttribute($title)
     {
         $this->attributes['title'] = $title;
-        $this->slug = Str::slug($title);
+        $this->slug = Transliterator::transliterate($title);
     }
 }

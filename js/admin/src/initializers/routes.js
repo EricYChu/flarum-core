@@ -4,6 +4,7 @@ import PermissionsPage from 'flarum/components/PermissionsPage';
 import AppearancePage from 'flarum/components/AppearancePage';
 import ExtensionsPage from 'flarum/components/ExtensionsPage';
 import MailPage from 'flarum/components/MailPage';
+import SMSPage from 'flarum/components/SMSPage';
 
 /**
  * The `routes` initializer defines the admin app's routes.
@@ -17,6 +18,7 @@ export default function(app) {
     'permissions': {path: '/permissions', component: PermissionsPage.component()},
     'appearance': {path: '/appearance', component: AppearancePage.component()},
     'extensions': {path: '/extensions', component: ExtensionsPage.component()},
-    'mail': {path: '/mail', component: MailPage.component()}
+    'mail': {path: '/mail', component: MailPage.component()},
+    'sms': {path: '/sms', component: SMSPage.component()}
   };
 }

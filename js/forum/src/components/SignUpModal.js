@@ -1,9 +1,9 @@
 import Modal from 'flarum/components/Modal';
 import LogInModal from 'flarum/components/LogInModal';
-import avatar from 'flarum/helpers/avatar';
 import Button from 'flarum/components/Button';
 import LogInButtons from 'flarum/components/LogInButtons';
 import extractText from 'flarum/utils/extractText';
+import callingCodes from 'flarum/utils/callingCodes';
 
 /**
  * The `SignUpModal` component displays a modal dialog with a singup form.
@@ -11,13 +11,35 @@ import extractText from 'flarum/utils/extractText';
  * ### Props
  *
  * - `username`
- * - `email`
+ * - `country_code`
+ * - `phone_number`
  * - `password`
- * - `token` An email token to sign up with.
+ * - `token` An phone token to sign up with.
  */
 export default class SignUpModal extends Modal {
   init() {
     super.init();
+
+    /**
+     * The value of the country code input.
+     *
+     * @type {Function}
+     */
+    this.country_code = m.prop(this.props.country_code || callingCodes.items[0].code);
+
+    /**
+     * The value of the phone number input.
+     *
+     * @type {Function}
+     */
+    this.phone_number = m.prop(this.props.phone_number || '');
+
+    /**
+     * The value of the verification code input.
+     *
+     * @type {Function}
+     */
+    this.verification_code = m.prop(this.props.verification_code || '');
 
     /**
      * The value of the username input.
@@ -27,18 +49,14 @@ export default class SignUpModal extends Modal {
     this.username = m.prop(this.props.username || '');
 
     /**
-     * The value of the email input.
-     *
-     * @type {Function}
-     */
-    this.email = m.prop(this.props.email || '');
-
-    /**
      * The value of the password input.
      *
      * @type {Function}
      */
     this.password = m.prop(this.props.password || '');
+
+
+    this.step = 1
   }
 
   className() {
@@ -61,43 +79,90 @@ export default class SignUpModal extends Modal {
   }
 
   body() {
+    const items = [];
+
+    callingCodes.items.forEach(item => {
+      items.push(<option value={item.code}>{item.name} (+{item.code})</option>);
+    });
+
     return [
-      this.props.token ? '' : <LogInButtons/>,
+      // this.props.token ? '' : <LogInButtons/>,
+      <LogInButtons/>,
 
       <div className="Form Form--centered">
-        <div className="Form-group">
-          <input className="FormControl" name="username" type="text" placeholder={extractText(app.translator.trans('core.forum.sign_up.username_placeholder'))}
-            value={this.username()}
-            onchange={m.withAttr('value', this.username)}
-            disabled={this.loading} />
-        </div>
+        {this.step === 1 ? [
+          <p className="helpText">{extractText(app.translator.trans('core.lib.phone_verification.verification_text'))}</p>,
+          <div className="Form-group">
+            <select className="FormControl" name="country_code" value={this.country_code()}
+                    onchange={m.withAttr('value', this.country_code)}
+                    disabled={this.loading}>
+              {(items)}
+            </select>
+          </div>,
+          <div className="Form-group">
+            <input className="FormControl" name="phone_number" type="tel" placeholder={extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder'))}
+                   value={this.phone_number()}
+                   onchange={m.withAttr('value', this.phone_number)}
+                   disabled={this.loading} />
+          </div>
+        ] : ''}
 
-        <div className="Form-group">
-          <input className="FormControl" name="email" type="email" placeholder={extractText(app.translator.trans('core.forum.sign_up.email_placeholder'))}
-            value={this.email()}
-            onchange={m.withAttr('value', this.email)}
-            disabled={this.loading || (this.props.token && this.props.email)} />
-        </div>
+        {this.step === 2 ? [
+          <p className="helpText">{extractText(app.translator.trans('core.lib.phone_verification.verification_text'))}</p>,
+          <div className="Form-group">
+            <p>+{this.country_code()} {this.phone_number()}</p>
+          </div>,
+          <div className="Form-group">
+            <input className="FormControl" name="verification_code" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
+                   onchange={m.withAttr('value', this.verification_code)}
+                   disabled={this.loading} />
+          </div>
+        ] : ''}
 
-        {this.props.token ? '' : (
+        {this.step === 3 ? [
+          <div className="Form-group">
+            <p>+{this.country_code()} {this.phone_number()}</p>
+          </div>,
+          <div className="Form-group">
+            <input className="FormControl" name="username" type="text" placeholder={extractText(app.translator.trans('core.forum.sign_up.username_placeholder'))}
+                   value={this.username()}
+                   onchange={m.withAttr('value', this.username)}
+                   disabled={this.loading} />
+          </div>,
           <div className="Form-group">
             <input className="FormControl" name="password" type="password" placeholder={extractText(app.translator.trans('core.forum.sign_up.password_placeholder'))}
-              value={this.password()}
-              onchange={m.withAttr('value', this.password)}
-              disabled={this.loading} />
+                   value={this.password()}
+                   onchange={m.withAttr('value', this.password)}
+                   disabled={this.loading} />
           </div>
-        )}
+        ] : ''}
 
         <div className="Form-group">
+          {this.step > 1 ? <Button
+            className="Button Button--text"
+            onclick={this.back.bind(this)}
+            disabled={this.loading}
+            type="button" style="float: left;">
+            Back
+          </Button> : ''}
           <Button
-            className="Button Button--primary Button--block"
-            type="submit"
+            className="Button Button--primary"
+            type="submit" style="float: right;"
             loading={this.loading}>
-            {app.translator.trans('core.forum.sign_up.submit_button')}
+            {app.translator.trans(this.step === 3 ? 'core.forum.sign_up.submit_button' : 'core.forum.sign_up.next_button')}
           </Button>
         </div>
       </div>
     ];
+  }
+
+  back() {
+    if (this.step === 3) {
+      this.step = 1;
+    } else {
+      this.step--;
+    }
+    m.redraw();
   }
 
   footer() {
@@ -109,23 +174,22 @@ export default class SignUpModal extends Modal {
   }
 
   /**
-   * Open the log in modal, prefilling it with an email/username/password if
+   * Open the log in modal, prefilling it with an phone_number if
    * the user has entered one.
    *
    * @public
    */
   logIn() {
     const props = {
-      identification: this.email() || this.username(),
-      password: this.password()
+      identification: (this.phone_number() ? '+' + this.country_code() + this.phone_number() : '')
     };
 
     app.modal.show(new LogInModal(props));
   }
 
   onready() {
-    if (this.props.username && !this.props.email) {
-      this.$('[name=email]').select();
+    if (this.props.username && !this.props.phone_number) {
+      this.$('[name=phone_number]').select();
     } else {
       this.$('[name=username]').select();
     }
@@ -134,17 +198,38 @@ export default class SignUpModal extends Modal {
   onsubmit(e) {
     e.preventDefault();
 
+    this.alert = null;
     this.loading = true;
 
     const data = this.submitData();
 
+    let path = '';
+    switch (this.step) {
+      case 1:
+        path = '/register/verification/start';
+        break;
+      case 2:
+        path = '/register/verification/check';
+        break;
+      case 3:
+        path = '/register';
+        break;
+    }
+
     app.request({
-      url: app.forum.attribute('baseUrl') + '/register',
+      url: app.forum.attribute('baseUrl') + path,
       method: 'POST',
       data,
       errorHandler: this.onerror.bind(this)
     }).then(
-      () => window.location.reload(),
+      () => {
+        if (this.step === 3) {
+          window.location.reload();
+        } else {
+          this.step++;
+          this.loaded();
+        }
+      },
       this.loaded.bind(this)
     );
   }
@@ -157,18 +242,16 @@ export default class SignUpModal extends Modal {
    */
   submitData() {
     const data = {
-      username: this.username(),
-      email: this.email()
+      phone: `${this.country_code()}${this.phone_number()}`
     };
 
-    if (this.props.token) {
-      data.token = this.props.token;
-    } else {
-      data.password = this.password();
+    if (this.step === 2) {
+      data.verification_code = this.verification_code();
     }
 
-    if (this.props.avatarUrl) {
-      data.avatarUrl = this.props.avatarUrl;
+    if (this.step === 3) {
+      data.username = this.username();
+      data.password = this.password();
     }
 
     return data;

@@ -17568,6 +17568,13 @@ System.register('flarum/components/AdminNav', ['flarum/Component', 'flarum/compo
               description: app.translator.trans('core.admin.nav.email_text')
             }));
 
+            items.add('sms', AdminLinkButton.component({
+              href: app.route('sms'),
+              icon: 'comments',
+              children: app.translator.trans('core.admin.nav.sms_button'),
+              description: app.translator.trans('core.admin.nav.sms_text')
+            }));
+
             items.add('permissions', AdminLinkButton.component({
               href: app.route('permissions'),
               icon: 'key',
@@ -21035,6 +21042,154 @@ System.register('flarum/components/SettingsModal', ['flarum/components/Modal', '
 });;
 'use strict';
 
+System.register('flarum/components/SMSPage', ['flarum/components/Page', 'flarum/components/FieldSet', 'flarum/components/Button', 'flarum/components/Alert', 'flarum/utils/saveSettings'], function (_export, _context) {
+  "use strict";
+
+  var Page, FieldSet, Button, Alert, saveSettings, SMSPage;
+  return {
+    setters: [function (_flarumComponentsPage) {
+      Page = _flarumComponentsPage.default;
+    }, function (_flarumComponentsFieldSet) {
+      FieldSet = _flarumComponentsFieldSet.default;
+    }, function (_flarumComponentsButton) {
+      Button = _flarumComponentsButton.default;
+    }, function (_flarumComponentsAlert) {
+      Alert = _flarumComponentsAlert.default;
+    }, function (_flarumUtilsSaveSettings) {
+      saveSettings = _flarumUtilsSaveSettings.default;
+    }],
+    execute: function () {
+      SMSPage = function (_Page) {
+        babelHelpers.inherits(SMSPage, _Page);
+
+        function SMSPage() {
+          babelHelpers.classCallCheck(this, SMSPage);
+          return babelHelpers.possibleConstructorReturn(this, (SMSPage.__proto__ || Object.getPrototypeOf(SMSPage)).apply(this, arguments));
+        }
+
+        babelHelpers.createClass(SMSPage, [{
+          key: 'init',
+          value: function init() {
+            var _this2 = this;
+
+            babelHelpers.get(SMSPage.prototype.__proto__ || Object.getPrototypeOf(SMSPage.prototype), 'init', this).call(this);
+
+            this.loading = false;
+
+            this.fields = ['sms_driver', 'sms_twilio_verification_api_key'];
+            this.values = {};
+
+            var settings = app.data.settings;
+            this.fields.forEach(function (key) {
+              return _this2.values[key] = m.prop(settings[key]);
+            });
+
+            this.localeOptions = {};
+            var locales = app.locales;
+            for (var i in locales) {
+              this.localeOptions[i] = locales[i] + ' (' + i + ')';
+            }
+          }
+        }, {
+          key: 'view',
+          value: function view() {
+            return m(
+              'div',
+              { className: 'SMSPage' },
+              m(
+                'div',
+                { className: 'container' },
+                m(
+                  'form',
+                  { onsubmit: this.onsubmit.bind(this) },
+                  m(
+                    'h2',
+                    null,
+                    app.translator.trans('core.admin.sms.heading')
+                  ),
+                  m(
+                    'div',
+                    { className: 'helpText' },
+                    app.translator.trans('core.admin.sms.text')
+                  ),
+                  FieldSet.component({
+                    label: app.translator.trans('core.admin.sms.driver_label'),
+                    className: 'SMSPage-SMSSettings',
+                    children: [m(
+                      'div',
+                      { className: 'SMSPage-SMSSettings-input' },
+                      m('input', { className: 'FormControl', value: this.values.sms_driver() || '', oninput: m.withAttr('value', this.values.sms_driver) })
+                    )]
+                  }),
+                  FieldSet.component({
+                    label: app.translator.trans('core.admin.sms.twilio_heading'),
+                    className: 'SMSPage-SMSSettings',
+                    children: [m(
+                      'div',
+                      { className: 'SMSPage-SMSSettings-input' },
+                      m(
+                        'label',
+                        null,
+                        app.translator.trans('core.admin.sms.twilio_verification_api_key')
+                      ),
+                      m('input', { className: 'FormControl', value: this.values.sms_twilio_verification_api_key() || '', oninput: m.withAttr('value', this.values.sms_twilio_verification_api_key) })
+                    )]
+                  }),
+                  Button.component({
+                    type: 'submit',
+                    className: 'Button Button--primary',
+                    children: app.translator.trans('core.admin.sms.submit_button'),
+                    loading: this.loading,
+                    disabled: !this.changed()
+                  })
+                )
+              )
+            );
+          }
+        }, {
+          key: 'changed',
+          value: function changed() {
+            var _this3 = this;
+
+            return this.fields.some(function (key) {
+              return _this3.values[key]() !== app.data.settings[key];
+            });
+          }
+        }, {
+          key: 'onsubmit',
+          value: function onsubmit(e) {
+            var _this4 = this;
+
+            e.preventDefault();
+
+            if (this.loading) return;
+
+            this.loading = true;
+            app.alerts.dismiss(this.successAlert);
+
+            var settings = {};
+
+            this.fields.forEach(function (key) {
+              return settings[key] = _this4.values[key]();
+            });
+
+            saveSettings(settings).then(function () {
+              app.alerts.show(_this4.successAlert = new Alert({ type: 'success', children: app.translator.trans('core.admin.basics.saved_message') }));
+            }).catch(function () {}).then(function () {
+              _this4.loading = false;
+              m.redraw();
+            });
+          }
+        }]);
+        return SMSPage;
+      }(Page);
+
+      _export('default', SMSPage);
+    }
+  };
+});;
+'use strict';
+
 System.register('flarum/components/SplitDropdown', ['flarum/components/Dropdown', 'flarum/components/Button', 'flarum/helpers/icon'], function (_export, _context) {
   "use strict";
 
@@ -21795,10 +21950,10 @@ System.register('flarum/initializers/preload', ['flarum/Session'], function (_ex
 });;
 'use strict';
 
-System.register('flarum/initializers/routes', ['flarum/components/DashboardPage', 'flarum/components/BasicsPage', 'flarum/components/PermissionsPage', 'flarum/components/AppearancePage', 'flarum/components/ExtensionsPage', 'flarum/components/MailPage'], function (_export, _context) {
+System.register('flarum/initializers/routes', ['flarum/components/DashboardPage', 'flarum/components/BasicsPage', 'flarum/components/PermissionsPage', 'flarum/components/AppearancePage', 'flarum/components/ExtensionsPage', 'flarum/components/MailPage', 'flarum/components/SMSPage'], function (_export, _context) {
   "use strict";
 
-  var DashboardPage, BasicsPage, PermissionsPage, AppearancePage, ExtensionsPage, MailPage;
+  var DashboardPage, BasicsPage, PermissionsPage, AppearancePage, ExtensionsPage, MailPage, SMSPage;
 
   _export('default', function (app) {
     app.routes = {
@@ -21807,7 +21962,8 @@ System.register('flarum/initializers/routes', ['flarum/components/DashboardPage'
       'permissions': { path: '/permissions', component: PermissionsPage.component() },
       'appearance': { path: '/appearance', component: AppearancePage.component() },
       'extensions': { path: '/extensions', component: ExtensionsPage.component() },
-      'mail': { path: '/mail', component: MailPage.component() }
+      'mail': { path: '/mail', component: MailPage.component() },
+      'sms': { path: '/sms', component: SMSPage.component() }
     };
   });
 
@@ -21824,6 +21980,8 @@ System.register('flarum/initializers/routes', ['flarum/components/DashboardPage'
       ExtensionsPage = _flarumComponentsExtensionsPage.default;
     }, function (_flarumComponentsMailPage) {
       MailPage = _flarumComponentsMailPage.default;
+    }, function (_flarumComponentsSMSPage) {
+      SMSPage = _flarumComponentsSMSPage.default;
     }],
     execute: function () {}
   };
@@ -23078,6 +23236,692 @@ System.register("flarum/utils/anchorScroll", [], function (_export, _context) {
   return {
     setters: [],
     execute: function () {}
+  };
+});;
+'use strict';
+
+System.register('flarum/utils/callingCodes', [], function (_export, _context) {
+  "use strict";
+
+  var items;
+  return {
+    setters: [],
+    execute: function () {
+      items = [{
+        name: app.translator.trans('countries.af'),
+        code: 93
+      }, {
+        name: app.translator.trans('countries.al'),
+        code: 355
+      }, {
+        name: app.translator.trans('countries.dz'),
+        code: 213
+      }, {
+        name: app.translator.trans('countries.ad'),
+        code: 376
+      }, {
+        name: app.translator.trans('countries.ao'),
+        code: 244
+      }, {
+        name: app.translator.trans('countries.ai'),
+        code: 1264
+      }, {
+        name: app.translator.trans('countries.ag'),
+        code: 1268
+      }, {
+        name: app.translator.trans('countries.ar'),
+        code: 54
+      }, {
+        name: app.translator.trans('countries.am'),
+        code: 374
+      }, {
+        name: app.translator.trans('countries.aw'),
+        code: 297
+      }, {
+        name: app.translator.trans('countries.au'),
+        code: 61
+      }, {
+        name: app.translator.trans('countries.at'),
+        code: 43
+      }, {
+        name: app.translator.trans('countries.az'),
+        code: 994
+      }, {
+        name: app.translator.trans('countries.bs'),
+        code: 1242
+      }, {
+        name: app.translator.trans('countries.bh'),
+        code: 973
+      }, {
+        name: app.translator.trans('countries.bd'),
+        code: 880
+      }, {
+        name: app.translator.trans('countries.bb'),
+        code: 1246
+      }, {
+        name: app.translator.trans('countries.by'),
+        code: 375
+      }, {
+        name: app.translator.trans('countries.be'),
+        code: 32
+      }, {
+        name: app.translator.trans('countries.bz'),
+        code: 501
+      }, {
+        name: app.translator.trans('countries.bj'),
+        code: 229
+      }, {
+        name: app.translator.trans('countries.bm'),
+        code: 1441
+      }, {
+        name: app.translator.trans('countries.bt'),
+        code: 975
+      }, {
+        name: app.translator.trans('countries.bo'),
+        code: 591
+      }, {
+        name: app.translator.trans('countries.ba'),
+        code: 387
+      }, {
+        name: app.translator.trans('countries.bw'),
+        code: 267
+      }, {
+        name: app.translator.trans('countries.br'),
+        code: 55
+      }, {
+        name: app.translator.trans('countries.vg'),
+        code: 1284
+      }, {
+        name: app.translator.trans('countries.bn'),
+        code: 673
+      }, {
+        name: app.translator.trans('countries.bg'),
+        code: 359
+      }, {
+        name: app.translator.trans('countries.bf'),
+        code: 226
+      }, {
+        name: app.translator.trans('countries.bi'),
+        code: 257
+      }, {
+        name: app.translator.trans('countries.cv'),
+        code: 238
+      }, {
+        name: app.translator.trans('countries.kh'),
+        code: 855
+      }, {
+        name: app.translator.trans('countries.cm'),
+        code: 237
+      }, {
+        name: app.translator.trans('countries.ca'),
+        code: 1
+      }, {
+        name: app.translator.trans('countries.ky'),
+        code: 1345
+      }, {
+        name: app.translator.trans('countries.cf'),
+        code: 236
+      }, {
+        name: app.translator.trans('countries.td'),
+        code: 235
+      }, {
+        name: app.translator.trans('countries.cl'),
+        code: 56
+      }, {
+        name: app.translator.trans('countries.cn'),
+        code: 86
+      }, {
+        name: app.translator.trans('countries.co'),
+        code: 57
+      }, {
+        name: app.translator.trans('countries.cg'),
+        code: 242
+      }, {
+        name: app.translator.trans('countries.cd'),
+        code: 243
+      }, {
+        name: app.translator.trans('countries.km'),
+        code: 682
+      }, {
+        name: app.translator.trans('countries.ck'),
+        code: 506
+      }, {
+        name: app.translator.trans('countries.cr'),
+        code: 385
+      }, {
+        name: app.translator.trans('countries.hr'),
+        code: 53
+      }, {
+        name: app.translator.trans('countries.cu'),
+        code: 357
+      }, {
+        name: app.translator.trans('countries.cz'),
+        code: 420
+      }, {
+        name: app.translator.trans('countries.dk'),
+        code: 45
+      }, {
+        name: app.translator.trans('countries.dj'),
+        code: 253
+      }, {
+        name: app.translator.trans('countries.dm'),
+        code: 1767
+      }, {
+        name: app.translator.trans('countries.do'),
+        code: 1809
+      }, {
+        name: app.translator.trans('countries.do'),
+        code: 1829
+      }, {
+        name: app.translator.trans('countries.do'),
+        code: 1849
+      }, {
+        name: app.translator.trans('countries.ec'),
+        code: 593
+      }, {
+        name: app.translator.trans('countries.eg'),
+        code: 20
+      }, {
+        name: app.translator.trans('countries.sv'),
+        code: 503
+      }, {
+        name: app.translator.trans('countries.ee'),
+        code: 372
+      }, {
+        name: app.translator.trans('countries.et'),
+        code: 251
+      }, {
+        name: app.translator.trans('countries.fk'),
+        code: 500
+      }, {
+        name: app.translator.trans('countries.fo'),
+        code: 298
+      }, {
+        name: app.translator.trans('countries.fj'),
+        code: 679
+      }, {
+        name: app.translator.trans('countries.fi'),
+        code: 358
+      }, {
+        name: app.translator.trans('countries.fr'),
+        code: 33
+      }, {
+        name: app.translator.trans('countries.gf'),
+        code: 594
+      }, {
+        name: app.translator.trans('countries.pf'),
+        code: 689
+      }, {
+        name: app.translator.trans('countries.ga'),
+        code: 241
+      }, {
+        name: app.translator.trans('countries.gm'),
+        code: 220
+      }, {
+        name: app.translator.trans('countries.ge'),
+        code: 995
+      }, {
+        name: app.translator.trans('countries.de'),
+        code: 49
+      }, {
+        name: app.translator.trans('countries.gh'),
+        code: 233
+      }, {
+        name: app.translator.trans('countries.gi'),
+        code: 350
+      }, {
+        name: app.translator.trans('countries.gr'),
+        code: 30
+      }, {
+        name: app.translator.trans('countries.gl'),
+        code: 299
+      }, {
+        name: app.translator.trans('countries.gd'),
+        code: 1473
+      }, {
+        name: app.translator.trans('countries.gp'),
+        code: 590
+      }, {
+        name: app.translator.trans('countries.gu'),
+        code: 1671
+      }, {
+        name: app.translator.trans('countries.gt'),
+        code: 502
+      }, {
+        name: app.translator.trans('countries.gg'),
+        code: 44
+      }, {
+        name: app.translator.trans('countries.gn'),
+        code: 224
+      }, {
+        name: app.translator.trans('countries.gw'),
+        code: 245
+      }, {
+        name: app.translator.trans('countries.gy'),
+        code: 592
+      }, {
+        name: app.translator.trans('countries.ht'),
+        code: 509
+      }, {
+        name: app.translator.trans('countries.hn'),
+        code: 504
+      }, {
+        name: app.translator.trans('countries.hk'),
+        code: 852
+      }, {
+        name: app.translator.trans('countries.hu'),
+        code: 36
+      }, {
+        name: app.translator.trans('countries.is'),
+        code: 354
+      }, {
+        name: app.translator.trans('countries.in'),
+        code: 91
+      }, {
+        name: app.translator.trans('countries.id'),
+        code: 62
+      }, {
+        name: app.translator.trans('countries.int'),
+        code: 882
+      }, {
+        name: app.translator.trans('countries.ir'),
+        code: 98
+      }, {
+        name: app.translator.trans('countries.iq'),
+        code: 964
+      }, {
+        name: app.translator.trans('countries.ie'),
+        code: 353
+      }, {
+        name: app.translator.trans('countries.im'),
+        code: 44
+      }, {
+        name: app.translator.trans('countries.il'),
+        code: 972
+      }, {
+        name: app.translator.trans('countries.it'),
+        code: 39
+      }, {
+        name: app.translator.trans('countries.ci'),
+        code: 225
+      }, {
+        name: app.translator.trans('countries.jm'),
+        code: 1876
+      }, {
+        name: app.translator.trans('countries.jp'),
+        code: 81
+      }, {
+        name: app.translator.trans('countries.je'),
+        code: 44
+      }, {
+        name: app.translator.trans('countries.jo'),
+        code: 962
+      }, {
+        name: app.translator.trans('countries.kz'),
+        code: 7
+      }, {
+        name: app.translator.trans('countries.ke'),
+        code: 254
+      }, {
+        name: app.translator.trans('countries.kw'),
+        code: 965
+      }, {
+        name: app.translator.trans('countries.kg'),
+        code: 996
+      }, {
+        name: app.translator.trans('countries.la'),
+        code: 856
+      }, {
+        name: app.translator.trans('countries.lv'),
+        code: 371
+      }, {
+        name: app.translator.trans('countries.lb'),
+        code: 961
+      }, {
+        name: app.translator.trans('countries.ls'),
+        code: 266
+      }, {
+        name: app.translator.trans('countries.lr'),
+        code: 231
+      }, {
+        name: app.translator.trans('countries.ly'),
+        code: 218
+      }, {
+        name: app.translator.trans('countries.li'),
+        code: 423
+      }, {
+        name: app.translator.trans('countries.lt'),
+        code: 370
+      }, {
+        name: app.translator.trans('countries.lu'),
+        code: 352
+      }, {
+        name: app.translator.trans('countries.mo'),
+        code: 853
+      }, {
+        name: app.translator.trans('countries.mk'),
+        code: 389
+      }, {
+        name: app.translator.trans('countries.mg'),
+        code: 261
+      }, {
+        name: app.translator.trans('countries.mw'),
+        code: 265
+      }, {
+        name: app.translator.trans('countries.my'),
+        code: 60
+      }, {
+        name: app.translator.trans('countries.mv'),
+        code: 960
+      }, {
+        name: app.translator.trans('countries.ml'),
+        code: 223
+      }, {
+        name: app.translator.trans('countries.mt'),
+        code: 356
+      }, {
+        name: app.translator.trans('countries.mq'),
+        code: 596
+      }, {
+        name: app.translator.trans('countries.mr'),
+        code: 222
+      }, {
+        name: app.translator.trans('countries.mu'),
+        code: 230
+      }, {
+        name: app.translator.trans('countries.yt'),
+        code: 269
+      }, {
+        name: app.translator.trans('countries.mx'),
+        code: 52
+      }, {
+        name: app.translator.trans('countries.md'),
+        code: 373
+      }, {
+        name: app.translator.trans('countries.mc'),
+        code: 377
+      }, {
+        name: app.translator.trans('countries.mn'),
+        code: 976
+      }, {
+        name: app.translator.trans('countries.me'),
+        code: 382
+      }, {
+        name: app.translator.trans('countries.ms'),
+        code: 1664
+      }, {
+        name: app.translator.trans('countries.ma'),
+        code: 212
+      }, {
+        name: app.translator.trans('countries.mz'),
+        code: 258
+      }, {
+        name: app.translator.trans('countries.mm'),
+        code: 95
+      }, {
+        name: app.translator.trans('countries.na'),
+        code: 264
+      }, {
+        name: app.translator.trans('countries.nr'),
+        code: 674
+      }, {
+        name: app.translator.trans('countries.np'),
+        code: 977
+      }, {
+        name: app.translator.trans('countries.nl'),
+        code: 31
+      }, {
+        name: app.translator.trans('countries.an'),
+        code: 599
+      }, {
+        name: app.translator.trans('countries.nc'),
+        code: 687
+      }, {
+        name: app.translator.trans('countries.nz'),
+        code: 64
+      }, {
+        name: app.translator.trans('countries.ni'),
+        code: 505
+      }, {
+        name: app.translator.trans('countries.ne'),
+        code: 227
+      }, {
+        name: app.translator.trans('countries.ng'),
+        code: 234
+      }, {
+        name: app.translator.trans('countries.kp'),
+        code: 850
+      }, {
+        name: app.translator.trans('countries.no'),
+        code: 47
+      }, {
+        name: app.translator.trans('countries.om'),
+        code: 968
+      }, {
+        name: app.translator.trans('countries.pk'),
+        code: 92
+      }, {
+        name: app.translator.trans('countries.ps'),
+        code: 970
+      }, {
+        name: app.translator.trans('countries.pa'),
+        code: 507
+      }, {
+        name: app.translator.trans('countries.pg'),
+        code: 675
+      }, {
+        name: app.translator.trans('countries.py'),
+        code: 595
+      }, {
+        name: app.translator.trans('countries.pe'),
+        code: 51
+      }, {
+        name: app.translator.trans('countries.ph'),
+        code: 63
+      }, {
+        name: app.translator.trans('countries.pl'),
+        code: 48
+      }, {
+        name: app.translator.trans('countries.pt'),
+        code: 351
+      }, {
+        name: app.translator.trans('countries.pr'),
+        code: 1787
+      }, {
+        name: app.translator.trans('countries.qa'),
+        code: 974
+      }, {
+        name: app.translator.trans('countries.re'),
+        code: 262
+      }, {
+        name: app.translator.trans('countries.ro'),
+        code: 40
+      }, {
+        name: app.translator.trans('countries.ru'),
+        code: 7
+      }, {
+        name: app.translator.trans('countries.rw'),
+        code: 250
+      }, {
+        name: app.translator.trans('countries.kn'),
+        code: 1869
+      }, {
+        name: app.translator.trans('countries.lc'),
+        code: 1758
+      }, {
+        name: app.translator.trans('countries.ws'),
+        code: 685
+      }, {
+        name: app.translator.trans('countries.sm'),
+        code: 378
+      }, {
+        name: app.translator.trans('countries.st'),
+        code: 239
+      }, {
+        name: app.translator.trans('countries.sa'),
+        code: 966
+      }, {
+        name: app.translator.trans('countries.sn'),
+        code: 221
+      }, {
+        name: app.translator.trans('countries.rs'),
+        code: 381
+      }, {
+        name: app.translator.trans('countries.sc'),
+        code: 248
+      }, {
+        name: app.translator.trans('countries.sl'),
+        code: 232
+      }, {
+        name: app.translator.trans('countries.sg'),
+        code: 65
+      }, {
+        name: app.translator.trans('countries.sk'),
+        code: 421
+      }, {
+        name: app.translator.trans('countries.si'),
+        code: 386
+      }, {
+        name: app.translator.trans('countries.sb'),
+        code: 677
+      }, {
+        name: app.translator.trans('countries.so'),
+        code: 252
+      }, {
+        name: app.translator.trans('countries.za'),
+        code: 27
+      }, {
+        name: app.translator.trans('countries.kr'),
+        code: 82
+      }, {
+        name: app.translator.trans('countries.es'),
+        code: 34
+      }, {
+        name: app.translator.trans('countries.lk'),
+        code: 94
+      }, {
+        name: app.translator.trans('countries.vc'),
+        code: 1784
+      }, {
+        name: app.translator.trans('countries.sd'),
+        code: 249
+      }, {
+        name: app.translator.trans('countries.sr'),
+        code: 597
+      }, {
+        name: app.translator.trans('countries.sz'),
+        code: 268
+      }, {
+        name: app.translator.trans('countries.se'),
+        code: 46
+      }, {
+        name: app.translator.trans('countries.ch'),
+        code: 41
+      }, {
+        name: app.translator.trans('countries.sy'),
+        code: 963
+      }, {
+        name: app.translator.trans('countries.tw'),
+        code: 886
+      }, {
+        name: app.translator.trans('countries.tj'),
+        code: 992
+      }, {
+        name: app.translator.trans('countries.tz'),
+        code: 255
+      }, {
+        name: app.translator.trans('countries.th'),
+        code: 66
+      }, {
+        name: app.translator.trans('countries.tl'),
+        code: 670
+      }, {
+        name: app.translator.trans('countries.tg'),
+        code: 228
+      }, {
+        name: app.translator.trans('countries.to'),
+        code: 676
+      }, {
+        name: app.translator.trans('countries.tt'),
+        code: 1868
+      }, {
+        name: app.translator.trans('countries.tn'),
+        code: 216
+      }, {
+        name: app.translator.trans('countries.tr'),
+        code: 90
+      }, {
+        name: app.translator.trans('countries.tm'),
+        code: 993
+      }, {
+        name: app.translator.trans('countries.tc'),
+        code: 1649
+      }, {
+        name: app.translator.trans('countries.ug'),
+        code: 256
+      }, {
+        name: app.translator.trans('countries.ua'),
+        code: 380
+      }, {
+        name: app.translator.trans('countries.ae'),
+        code: 971
+      }, {
+        name: app.translator.trans('countries.gb'),
+        code: 44
+      }, {
+        name: app.translator.trans('countries.us'),
+        code: 1
+      }, {
+        name: app.translator.trans('countries.uy'),
+        code: 598
+      }, {
+        name: app.translator.trans('countries.uz'),
+        code: 998
+      }, {
+        name: app.translator.trans('countries.vu'),
+        code: 678
+      }, {
+        name: app.translator.trans('countries.ve'),
+        code: 58
+      }, {
+        name: app.translator.trans('countries.vn'),
+        code: 84
+      }, {
+        name: app.translator.trans('countries.ye'),
+        code: 967
+      }, {
+        name: app.translator.trans('countries.zm'),
+        code: 260
+      }, {
+        name: app.translator.trans('countries.zw'),
+        code: 263
+      }];
+
+
+      Object.defineProperty(items, 'parsePhone', {
+        value: function value(phone) {
+          var defaultCountryCode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : items[0].code;
+
+          var countryCode = '';
+          phone = phone.replace('+', '');
+          items.forEach(function (item) {
+            var pattern = new RegExp('^' + item.code + '\\d+');
+            if (pattern.test(phone) && item.code.toString().length > countryCode.length) {
+              countryCode = item.code.toString();
+            }
+          });
+          if (countryCode.length === 0) {
+            countryCode = defaultCountryCode.toString();
+          }
+          return {
+            countryCode: Number(countryCode),
+            phoneNumber: phone.length > phone.length ? phone.substring(countryCode.length) : ''
+          };
+        }
+      });
+
+      _export('default', items);
+    }
   };
 });;
 'use strict';

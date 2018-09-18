@@ -44,16 +44,33 @@ class UserRepository
     }
 
     /**
-     * Find a user by an identification (username or email).
+     * Find a user by an identification (username, phone or email).
      *
      * @param string $identification
      * @return User|null
      */
     public function findByIdentification($identification)
     {
-        $field = filter_var($identification, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        if (filter_var($identification, FILTER_VALIDATE_EMAIL)) {
+            $field = 'email';
+        } elseif (preg_match('/^\d+$/', $identification)) {
+            $field = 'phone';
+        } else {
+            $field = 'username';
+        }
 
         return User::where($field, $identification)->first();
+    }
+
+    /**
+     * Find a user by phone.
+     *
+     * @param string $phone
+     * @return User|null
+     */
+    public function findByPhone($phone)
+    {
+        return User::where('phone', $phone)->first();
     }
 
     /**

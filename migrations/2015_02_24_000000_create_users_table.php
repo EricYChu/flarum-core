@@ -17,7 +17,8 @@ return Migration::createTable(
     function (Blueprint $table) {
         $table->increments('id');
         $table->string('username', 100)->unique();
-        $table->string('email', 150)->unique();
+        $table->string('email', 150)->nullable()->unique();
+        $table->string('phone', 20)->unique();
         $table->boolean('is_activated')->default(0);
         $table->string('password', 100);
         $table->text('bio')->nullable();

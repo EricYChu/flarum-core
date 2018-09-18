@@ -87,7 +87,7 @@ abstract class AbstractValidator
      * @param array $attributes
      * @return \Illuminate\Validation\Validator
      */
-    protected function makeValidator(array $attributes)
+    public function makeValidator(array $attributes)
     {
         $rules = array_only($this->getRules(), array_keys($attributes));
 

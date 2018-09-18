@@ -1,5 +1,6 @@
 .Form-group {
   margin-bottom: 24px;
+  .clearfix();
 
   &:last-child {
     margin-bottom: 0 !important;
@@ -9,12 +10,14 @@
 .Form--centered {
   text-align: center;
 
+  select.FormControl,
   .FormControl[type=text],
+  .FormControl[type=tel],
   .FormControl[type=email],
   .FormControl[type=password],
   .Button {
     margin: 0 auto;
-    text-align: center;
+    //text-align: center;
     height: 50px;
     padding: 15px 20px;
     font-size: 15px;
@@ -22,6 +25,11 @@
     @media @phone {
       font-size: 16px; // minimum font-size required to prevent page zoom on focus in iOS 10
     }
+  }
+
+  select.FormControl{
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   .Form-group {

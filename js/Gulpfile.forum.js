@@ -1,6 +1,6 @@
 var gulp = require('flarum-gulp');
 
-var bowerDir = '../bower_components';
+var bowerDir = 'bower_components';
 
 gulp({
   includeHelpers: true,
@@ -28,9 +28,9 @@ gulp({
   ],
   modules: {
     'flarum': [
-      'src/**/*.js',
-      '../lib/**/*.js'
+      'forum/src/**/*.js',
+      'lib/**/*.js'
     ]
   },
-  outputFile: 'dist/app.js'
+  outputFile: 'forum/dist/app.js'
 });

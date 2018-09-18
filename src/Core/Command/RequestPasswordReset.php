@@ -18,13 +18,13 @@ class RequestPasswordReset
      *
      * @var string
      */
-    public $email;
+    public $phone;
 
     /**
-     * @param string $email The email of the user to request a password reset for.
+     * @param string $phone The phone of the user to request a password reset for.
      */
-    public function __construct($email)
+    public function __construct($phone)
     {
-        $this->email = $email;
+        $this->phone = $phone;
     }
 }

@@ -44,6 +44,8 @@ class DefaultsDataProvider implements DataProviderInterface
         'forum_description' => '',
         'mail_driver' => 'mail',
         'mail_from' => 'noreply@flarum.dev',
+        'sms_driver' => 'twilio',
+        'sms_twilio_verification_api_key' => '',
         'theme_colored_header' => '0',
         'theme_dark_mode' => '0',
         'theme_primary_color' => '#4D698E',

@@ -45,10 +45,10 @@ class ForgotPasswordController implements ControllerInterface
      */
     public function handle(ServerRequestInterface $request)
     {
-        $email = array_get($request->getParsedBody(), 'email');
+        $phone = array_get($request->getParsedBody(), 'phone');
 
         $this->bus->dispatch(
-            new RequestPasswordReset($email)
+            new RequestPasswordReset($phone)
         );
 
         return new EmptyResponse;

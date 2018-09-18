@@ -116,7 +116,7 @@ class ApiServiceProvider extends AbstractServiceProvider
             $route->toController(Controller\TokenController::class)
         );
 
-        // Send forgot password email
+        // Send forgot password verification code
         $routes->post(
             '/forgot',
             'forgot',

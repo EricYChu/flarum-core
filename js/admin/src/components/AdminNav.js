@@ -53,6 +53,13 @@ export default class AdminNav extends Component {
       description: app.translator.trans('core.admin.nav.email_text')
     }));
 
+    items.add('sms', AdminLinkButton.component({
+      href: app.route('sms'),
+      icon: 'comments',
+      children: app.translator.trans('core.admin.nav.sms_button'),
+      description: app.translator.trans('core.admin.nav.sms_text')
+    }));
+
     items.add('permissions', AdminLinkButton.component({
       href: app.route('permissions'),
       icon: 'key',

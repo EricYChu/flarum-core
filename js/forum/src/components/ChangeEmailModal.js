@@ -1,5 +1,6 @@
 import Modal from 'flarum/components/Modal';
 import Button from 'flarum/components/Button';
+import {stringify} from 'flarum/utils/string';
 
 /**
  * The `ChangeEmailModal` component shows a modal dialog which allows the user
@@ -60,15 +61,17 @@ export default class ChangeEmailModal extends Modal {
         <div className="Form Form--centered">
           <div className="Form-group">
             <input type="email" name="email" className="FormControl"
-              placeholder={app.session.user.email()}
-              bidi={this.email}
-              disabled={this.loading}/>
+                   placeholder={stringify(app.session.user.email()) || app.translator.trans('core.forum.change_email.email_placeholder')}
+                   bidi={this.email}
+                   required={true}
+                   disabled={this.loading}/>
           </div>
           <div className="Form-group">
             <input type="password" name="password" className="FormControl"
-              placeholder={app.translator.trans('core.forum.change_email.confirm_password_placeholder')}
-              bidi={this.password}
-              disabled={this.loading}/>
+                   placeholder={app.translator.trans('core.forum.change_email.confirm_password_placeholder')}
+                   bidi={this.password}
+                   required={true}
+                   disabled={this.loading}/>
           </div>
           <div className="Form-group">
             {Button.component({

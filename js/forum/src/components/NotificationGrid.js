@@ -2,6 +2,7 @@ import Component from 'flarum/Component';
 import Checkbox from 'flarum/components/Checkbox';
 import icon from 'flarum/helpers/icon';
 import ItemList from 'flarum/utils/ItemList';
+import {stringify} from 'flarum/utils/string';
 
 /**
  * The `NotificationGrid` component displays a table of notification types and
@@ -18,10 +19,16 @@ export default class NotificationGrid extends Component {
      *
      * @type {Array}
      */
-    this.methods = [
-      {name: 'alert', icon: 'bell', label: app.translator.trans('core.forum.settings.notify_by_web_heading')},
-      {name: 'email', icon: 'envelope-o', label: app.translator.trans('core.forum.settings.notify_by_email_heading')}
-    ];
+    if (stringify(app.session.user.email()).length) {
+      this.methods = [
+        {name: 'alert', icon: 'bell', label: app.translator.trans('core.forum.settings.notify_by_web_heading')},
+        {name: 'email', icon: 'envelope-o', label: app.translator.trans('core.forum.settings.notify_by_email_heading')}
+      ];
+    } else {
+      this.methods = [
+        {name: 'alert', icon: 'bell', label: app.translator.trans('core.forum.settings.notify_by_web_heading')}
+      ];
+    }
 
     /**
      * A map of notification type-method combinations to the checkbox instances

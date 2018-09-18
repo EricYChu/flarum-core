@@ -20047,15 +20047,17 @@ System.register('flarum/components/Button', ['flarum/Component', 'flarum/helpers
 });;
 'use strict';
 
-System.register('flarum/components/ChangeEmailModal', ['flarum/components/Modal', 'flarum/components/Button'], function (_export, _context) {
+System.register('flarum/components/ChangeEmailModal', ['flarum/components/Modal', 'flarum/components/Button', 'flarum/utils/string'], function (_export, _context) {
   "use strict";
 
-  var Modal, Button, ChangeEmailModal;
+  var Modal, Button, stringify, ChangeEmailModal;
   return {
     setters: [function (_flarumComponentsModal) {
       Modal = _flarumComponentsModal.default;
     }, function (_flarumComponentsButton) {
       Button = _flarumComponentsButton.default;
+    }, function (_flarumUtilsString) {
+      stringify = _flarumUtilsString.stringify;
     }],
     execute: function () {
       ChangeEmailModal = function (_Modal) {
@@ -20144,8 +20146,9 @@ System.register('flarum/components/ChangeEmailModal', ['flarum/components/Modal'
                   'div',
                   { className: 'Form-group' },
                   m('input', { type: 'email', name: 'email', className: 'FormControl',
-                    placeholder: app.session.user.email(),
+                    placeholder: stringify(app.session.user.email()) || app.translator.trans('core.forum.change_email.email_placeholder'),
                     bidi: this.email,
+                    required: true,
                     disabled: this.loading })
                 ),
                 m(
@@ -20154,6 +20157,7 @@ System.register('flarum/components/ChangeEmailModal', ['flarum/components/Modal'
                   m('input', { type: 'password', name: 'password', className: 'FormControl',
                     placeholder: app.translator.trans('core.forum.change_email.confirm_password_placeholder'),
                     bidi: this.password,
+                    required: true,
                     disabled: this.loading })
                 ),
                 m(
@@ -20213,15 +20217,17 @@ System.register('flarum/components/ChangeEmailModal', ['flarum/components/Modal'
 });;
 'use strict';
 
-System.register('flarum/components/ChangePasswordModal', ['flarum/components/Modal', 'flarum/components/Button'], function (_export, _context) {
+System.register('flarum/components/ChangePasswordModal', ['flarum/components/Modal', 'flarum/components/Button', 'flarum/utils/extractText'], function (_export, _context) {
   "use strict";
 
-  var Modal, Button, ChangePasswordModal;
+  var Modal, Button, extractText, ChangePasswordModal;
   return {
     setters: [function (_flarumComponentsModal) {
       Modal = _flarumComponentsModal.default;
     }, function (_flarumComponentsButton) {
       Button = _flarumComponentsButton.default;
+    }, function (_flarumUtilsExtractText) {
+      extractText = _flarumUtilsExtractText.default;
     }],
     execute: function () {
       ChangePasswordModal = function (_Modal) {
@@ -20233,6 +20239,39 @@ System.register('flarum/components/ChangePasswordModal', ['flarum/components/Mod
         }
 
         babelHelpers.createClass(ChangePasswordModal, [{
+          key: 'init',
+          value: function init() {
+            babelHelpers.get(ChangePasswordModal.prototype.__proto__ || Object.getPrototypeOf(ChangePasswordModal.prototype), 'init', this).call(this);
+
+            /**
+             * Whether or not the password has been changed successfully.
+             *
+             * @type {Boolean}
+             */
+            this.success = false;
+
+            /**
+             * The value of the old password input.
+             *
+             * @type {function}
+             */
+            this.oldPassword = m.prop('');
+
+            /**
+             * The value of the password input.
+             *
+             * @type {function}
+             */
+            this.password = m.prop('');
+
+            /**
+             * The value of the password confirmation input.
+             *
+             * @type {Function}
+             */
+            this.passwordConfirmation = m.prop('');
+          }
+        }, {
           key: 'className',
           value: function className() {
             return 'ChangePasswordModal Modal--small';
@@ -20245,6 +20284,31 @@ System.register('flarum/components/ChangePasswordModal', ['flarum/components/Mod
         }, {
           key: 'content',
           value: function content() {
+            if (this.success) {
+              return m(
+                'div',
+                { className: 'Modal-body' },
+                m(
+                  'div',
+                  { className: 'Form Form--centered' },
+                  m(
+                    'p',
+                    { className: 'helpText' },
+                    app.translator.trans('core.forum.change_password.confirmation_message')
+                  ),
+                  m(
+                    'div',
+                    { className: 'Form-group' },
+                    m(
+                      Button,
+                      { className: 'Button Button--primary Button--block', onclick: this.hide.bind(this) },
+                      app.translator.trans('core.forum.change_password.dismiss_button')
+                    )
+                  )
+                )
+              );
+            }
+
             return m(
               'div',
               { className: 'Modal-body' },
@@ -20252,9 +20316,20 @@ System.register('flarum/components/ChangePasswordModal', ['flarum/components/Mod
                 'div',
                 { className: 'Form Form--centered' },
                 m(
-                  'p',
-                  { className: 'helpText' },
-                  app.translator.trans('core.forum.change_password.text')
+                  'div',
+                  { className: 'Form-group' },
+                  m('input', { className: 'FormControl', name: 'password', type: 'password', placeholder: extractText(app.translator.trans('core.forum.change_password.new_password_placeholder')),
+                    bidi: this.password,
+                    required: true,
+                    disabled: this.loading })
+                ),
+                m(
+                  'div',
+                  { className: 'Form-group' },
+                  m('input', { className: 'FormControl', name: 'old_password', type: 'password', placeholder: extractText(app.translator.trans('core.forum.change_password.old_password_placeholder')),
+                    bidi: this.oldPassword,
+                    required: true,
+                    disabled: this.loading })
                 ),
                 m(
                   'div',
@@ -20263,30 +20338,324 @@ System.register('flarum/components/ChangePasswordModal', ['flarum/components/Mod
                     className: 'Button Button--primary Button--block',
                     type: 'submit',
                     loading: this.loading,
-                    children: app.translator.trans('core.forum.change_password.send_button')
+                    children: app.translator.trans('core.forum.change_password.submit_button')
                   })
                 )
               )
             );
           }
         }, {
+          key: 'onerror',
+          value: function onerror(error) {
+            if (error.status === 401) {
+              error.alert.props.children = app.translator.trans('core.forum.change_password.incorrect_password_message');
+            }
+
+            babelHelpers.get(ChangePasswordModal.prototype.__proto__ || Object.getPrototypeOf(ChangePasswordModal.prototype), 'onerror', this).call(this, error);
+          }
+        }, {
           key: 'onsubmit',
           value: function onsubmit(e) {
+            var _this2 = this;
+
             e.preventDefault();
 
-            this.loading = true;
+            // if (this.password() !== this.passwordConfirmation()) {
+            // }
 
-            app.request({
-              method: 'POST',
-              url: app.forum.attribute('apiUrl') + '/forgot',
-              data: { email: app.session.user.email() }
-            }).then(this.hide.bind(this), this.loaded.bind(this));
+            this.loading = true;
+            this.alert = null;
+
+            app.session.user.save({ password: this.password() }, {
+              errorHandler: this.onerror.bind(this),
+              meta: { password: this.oldPassword() }
+            }).then(function () {
+              return _this2.success = true;
+            }).catch(function () {}).then(this.loaded.bind(this));
           }
         }]);
         return ChangePasswordModal;
       }(Modal);
 
       _export('default', ChangePasswordModal);
+    }
+  };
+});;
+'use strict';
+
+System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal', 'flarum/components/Button', 'flarum/utils/extractText', 'flarum/utils/callingCodes'], function (_export, _context) {
+  "use strict";
+
+  var Modal, Button, extractText, callingCodes, ChangePhoneModal;
+  return {
+    setters: [function (_flarumComponentsModal) {
+      Modal = _flarumComponentsModal.default;
+    }, function (_flarumComponentsButton) {
+      Button = _flarumComponentsButton.default;
+    }, function (_flarumUtilsExtractText) {
+      extractText = _flarumUtilsExtractText.default;
+    }, function (_flarumUtilsCallingCodes) {
+      callingCodes = _flarumUtilsCallingCodes.default;
+    }],
+    execute: function () {
+      ChangePhoneModal = function (_Modal) {
+        babelHelpers.inherits(ChangePhoneModal, _Modal);
+
+        function ChangePhoneModal() {
+          babelHelpers.classCallCheck(this, ChangePhoneModal);
+          return babelHelpers.possibleConstructorReturn(this, (ChangePhoneModal.__proto__ || Object.getPrototypeOf(ChangePhoneModal)).apply(this, arguments));
+        }
+
+        babelHelpers.createClass(ChangePhoneModal, [{
+          key: 'init',
+          value: function init() {
+            babelHelpers.get(ChangePhoneModal.prototype.__proto__ || Object.getPrototypeOf(ChangePhoneModal.prototype), 'init', this).call(this);
+
+            var _callingCodes$parsePh = callingCodes.parsePhone(app.session.user.phone()),
+                countryCode = _callingCodes$parsePh.countryCode,
+                phoneNumber = _callingCodes$parsePh.phoneNumber;
+
+            /**
+             * Whether or not the phone has been changed successfully.
+             *
+             * @type {Boolean}
+             */
+            this.success = false;
+
+            /**
+             * The value of the country code input.
+             *
+             * @type {Function}
+             */
+            this.country_code = m.prop(this.props.country_code || countryCode);
+
+            /**
+             * The value of the phone number input.
+             *
+             * @type {Function}
+             */
+            this.phone_number = m.prop(this.props.phone_number || phoneNumber);
+
+            /**
+             * The value of the verification code input.
+             *
+             * @type {Function}
+             */
+            this.verification_code = m.prop(this.props.verification_code || '');
+
+            /**
+             * The value of the password input.
+             *
+             * @type {function}
+             */
+            this.password = m.prop('');
+
+            this.step = 1;
+          }
+        }, {
+          key: 'className',
+          value: function className() {
+            return 'ChangePhoneModal Modal--small';
+          }
+        }, {
+          key: 'title',
+          value: function title() {
+            return app.translator.trans('core.forum.change_phone.title');
+          }
+        }, {
+          key: 'content',
+          value: function content() {
+            if (this.success) {
+              return m(
+                'div',
+                { className: 'Modal-body' },
+                m(
+                  'div',
+                  { className: 'Form Form--centered' },
+                  m(
+                    'p',
+                    { className: 'helpText' },
+                    app.translator.trans('core.forum.change_phone.confirmation_message', { country_code: m(
+                        'strong',
+                        null,
+                        '+',
+                        this.country_code()
+                      ), phone_number: m(
+                        'strong',
+                        null,
+                        this.phone_number()
+                      ) })
+                  ),
+                  m(
+                    'div',
+                    { className: 'Form-group' },
+                    m(
+                      Button,
+                      { className: 'Button Button--primary Button--block', onclick: this.hide.bind(this) },
+                      app.translator.trans('core.forum.change_phone.dismiss_button')
+                    )
+                  )
+                )
+              );
+            }
+
+            var items = [];
+
+            callingCodes.items.forEach(function (item) {
+              items.push(m(
+                'option',
+                { value: item.code },
+                item.name,
+                ' (+',
+                item.code,
+                ')'
+              ));
+            });
+
+            return m(
+              'div',
+              { className: 'Modal-body' },
+              m(
+                'div',
+                { className: 'Form Form--centered' },
+                this.step === 1 ? [m(
+                  'p',
+                  { className: 'helpText' },
+                  extractText(app.translator.trans('core.lib.phone_verification.verification_text'))
+                ), m(
+                  'div',
+                  { className: 'Form-group' },
+                  m(
+                    'select',
+                    { className: 'FormControl', name: 'country_code', value: this.country_code(),
+                      onchange: m.withAttr('value', this.country_code),
+                      required: true,
+                      disabled: this.loading },
+                    items
+                  )
+                ), m(
+                  'div',
+                  { className: 'Form-group' },
+                  m('input', { className: 'FormControl', name: 'phone_number', type: 'tel', placeholder: extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder')),
+                    value: this.phone_number(),
+                    onchange: m.withAttr('value', this.phone_number),
+                    required: true,
+                    disabled: this.loading })
+                ), m(
+                  'div',
+                  { className: 'Form-group' },
+                  m('input', { type: 'password', name: 'password', className: 'FormControl',
+                    placeholder: app.translator.trans('core.forum.change_phone.confirm_password_placeholder'),
+                    bidi: this.password,
+                    required: true,
+                    disabled: this.loading })
+                ), m(
+                  'div',
+                  { className: 'Form-group' },
+                  Button.component({
+                    className: 'Button Button--primary Button--block',
+                    type: 'submit',
+                    loading: this.loading,
+                    children: app.translator.trans('core.forum.change_phone.submit_button')
+                  })
+                )] : '',
+                ',',
+                this.step === 2 ? [m(
+                  'div',
+                  { className: 'Form-group' },
+                  m(
+                    'p',
+                    null,
+                    '+',
+                    this.country_code(),
+                    ' ',
+                    this.phone_number()
+                  )
+                ), m(
+                  'div',
+                  { className: 'Form-group' },
+                  m('input', { className: 'FormControl', name: 'verification_code', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
+                    onchange: m.withAttr('value', this.verification_code),
+                    disabled: this.loading })
+                ), m(
+                  'div',
+                  { className: 'Form-group' },
+                  Button.component({
+                    className: 'Button Button--primary Button--block',
+                    type: 'submit',
+                    loading: this.loading,
+                    children: app.translator.trans('core.forum.change_phone.verify_button')
+                  })
+                )] : ''
+              )
+            );
+          }
+        }, {
+          key: 'onsubmit',
+          value: function onsubmit(e) {
+            var _this2 = this;
+
+            e.preventDefault();
+
+            var phone = this.phone();
+
+            // If the user hasn't actually entered a different phone address, we don't
+            // need to do anything. Woot!
+            if (phone === app.session.user.phone()) {
+              this.hide();
+              return;
+            }
+
+            // const oldEmail = app.session.user.phone();
+
+            this.loading = true;
+            this.alert = null;
+
+            var data = {
+              phone: phone
+            };
+
+            if (this.step === 1) {
+              app.session.user.save(data, {
+                errorHandler: this.onerror.bind(this),
+                meta: { password: this.password() }
+              }).then(function () {
+                _this2.step++;
+                _this2.loaded();
+              }).catch(function () {}).then(this.loaded.bind(this));
+            } else {
+              data.verification_code = this.verification_code();
+              app.request({
+                url: app.forum.attribute('baseUrl') + '/confirm/phone',
+                method: 'POST',
+                data: data,
+                errorHandler: this.onerror.bind(this)
+              }).then(function () {
+                app.session.user.data.attributes.phone = phone;
+                _this2.success = true;
+                _this2.loaded();
+              }, this.loaded.bind(this));
+            }
+          }
+        }, {
+          key: 'phone',
+          value: function phone() {
+            return '' + this.country_code() + this.phone_number();
+          }
+        }, {
+          key: 'onerror',
+          value: function onerror(error) {
+            if (error.status === 401) {
+              error.alert.props.children = app.translator.trans('core.forum.change_phone.incorrect_password_message');
+            }
+
+            babelHelpers.get(ChangePhoneModal.prototype.__proto__ || Object.getPrototypeOf(ChangePhoneModal.prototype), 'onerror', this).call(this, error);
+          }
+        }]);
+        return ChangePhoneModal;
+      }(Modal);
+
+      _export('default', ChangePhoneModal);
     }
   };
 });;
@@ -22908,19 +23277,19 @@ System.register('flarum/components/FieldSet', ['flarum/Component', 'flarum/helpe
 });;
 'use strict';
 
-System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Modal', 'flarum/components/Alert', 'flarum/components/Button', 'flarum/utils/extractText'], function (_export, _context) {
+System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Modal', 'flarum/components/Button', 'flarum/utils/extractText', 'flarum/components/ResetPasswordModal'], function (_export, _context) {
   "use strict";
 
-  var Modal, Alert, Button, extractText, ForgotPasswordModal;
+  var Modal, Button, extractText, ResetPasswordModal, ForgotPasswordModal;
   return {
     setters: [function (_flarumComponentsModal) {
       Modal = _flarumComponentsModal.default;
-    }, function (_flarumComponentsAlert) {
-      Alert = _flarumComponentsAlert.default;
     }, function (_flarumComponentsButton) {
       Button = _flarumComponentsButton.default;
     }, function (_flarumUtilsExtractText) {
       extractText = _flarumUtilsExtractText.default;
+    }, function (_flarumComponentsResetPasswordModal) {
+      ResetPasswordModal = _flarumComponentsResetPasswordModal.default;
     }],
     execute: function () {
       ForgotPasswordModal = function (_Modal) {
@@ -22937,18 +23306,11 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
             babelHelpers.get(ForgotPasswordModal.prototype.__proto__ || Object.getPrototypeOf(ForgotPasswordModal.prototype), 'init', this).call(this);
 
             /**
-             * The value of the email input.
+             * The value of the phone input.
              *
              * @type {Function}
              */
-            this.email = m.prop(this.props.email || '');
-
-            /**
-             * Whether or not the password reset email was sent successfully.
-             *
-             * @type {Boolean}
-             */
-            this.success = false;
+            this.phone = m.prop(this.props.phone || '');
           }
         }, {
           key: 'className',
@@ -22963,31 +23325,6 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
         }, {
           key: 'content',
           value: function content() {
-            if (this.success) {
-              return m(
-                'div',
-                { className: 'Modal-body' },
-                m(
-                  'div',
-                  { className: 'Form Form--centered' },
-                  m(
-                    'p',
-                    { className: 'helpText' },
-                    app.translator.trans('core.forum.forgot_password.email_sent_message')
-                  ),
-                  m(
-                    'div',
-                    { className: 'Form-group' },
-                    m(
-                      Button,
-                      { className: 'Button Button--primary Button--block', onclick: this.hide.bind(this) },
-                      app.translator.trans('core.forum.forgot_password.dismiss_button')
-                    )
-                  )
-                )
-              );
-            }
-
             return m(
               'div',
               { className: 'Modal-body' },
@@ -23002,9 +23339,9 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
                 m(
                   'div',
                   { className: 'Form-group' },
-                  m('input', { className: 'FormControl', name: 'email', type: 'email', placeholder: extractText(app.translator.trans('core.forum.forgot_password.email_placeholder')),
-                    value: this.email(),
-                    onchange: m.withAttr('value', this.email),
+                  m('input', { className: 'FormControl', name: 'phone', type: 'tel', placeholder: extractText(app.translator.trans('core.forum.forgot_password.phone_placeholder')),
+                    value: this.phone(),
+                    onchange: m.withAttr('value', this.phone),
                     disabled: this.loading })
                 ),
                 m(
@@ -23021,10 +23358,16 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
             );
           }
         }, {
+          key: 'resetPassword',
+          value: function resetPassword() {
+            var props = {
+              phone: this.phone()
+            };
+            app.modal.show(new ResetPasswordModal(props));
+          }
+        }, {
           key: 'onsubmit',
           value: function onsubmit(e) {
-            var _this2 = this;
-
             e.preventDefault();
 
             this.loading = true;
@@ -23032,12 +23375,9 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
             app.request({
               method: 'POST',
               url: app.forum.attribute('apiUrl') + '/forgot',
-              data: { email: this.email() },
+              data: { phone: this.phone() },
               errorHandler: this.onerror.bind(this)
-            }).then(function () {
-              _this2.success = true;
-              _this2.alert = null;
-            }).catch(function () {}).then(this.loaded.bind(this));
+            }).then(this.resetPassword.bind(this)).catch(function () {}).then(this.loaded.bind(this));
           }
         }, {
           key: 'onerror',
@@ -23883,10 +24223,10 @@ System.register('flarum/components/LogInButtons', ['flarum/Component', 'flarum/u
 });;
 'use strict';
 
-System.register('flarum/components/LogInModal', ['flarum/components/Modal', 'flarum/components/ForgotPasswordModal', 'flarum/components/SignUpModal', 'flarum/components/Alert', 'flarum/components/Button', 'flarum/components/LogInButtons', 'flarum/utils/extractText'], function (_export, _context) {
+System.register('flarum/components/LogInModal', ['flarum/components/Modal', 'flarum/components/ForgotPasswordModal', 'flarum/components/SignUpModal', 'flarum/components/Alert', 'flarum/components/Button', 'flarum/components/LogInButtons', 'flarum/utils/extractText', 'flarum/utils/callingCodes'], function (_export, _context) {
   "use strict";
 
-  var Modal, ForgotPasswordModal, SignUpModal, Alert, Button, LogInButtons, extractText, LogInModal;
+  var Modal, ForgotPasswordModal, SignUpModal, Alert, Button, LogInButtons, extractText, callingCodes, LogInModal;
   return {
     setters: [function (_flarumComponentsModal) {
       Modal = _flarumComponentsModal.default;
@@ -23902,6 +24242,8 @@ System.register('flarum/components/LogInModal', ['flarum/components/Modal', 'fla
       LogInButtons = _flarumComponentsLogInButtons.default;
     }, function (_flarumUtilsExtractText) {
       extractText = _flarumUtilsExtractText.default;
+    }, function (_flarumUtilsCallingCodes) {
+      callingCodes = _flarumUtilsCallingCodes.default;
     }],
     execute: function () {
       LogInModal = function (_Modal) {
@@ -23961,7 +24303,7 @@ System.register('flarum/components/LogInModal', ['flarum/components/Modal', 'fla
                 m(
                   'div',
                   { className: 'Form-group' },
-                  m('input', { className: 'FormControl', name: 'identification', type: 'text', placeholder: extractText(app.translator.trans('core.forum.log_in.username_or_email_placeholder')),
+                  m('input', { className: 'FormControl', name: 'identification', type: 'text', placeholder: extractText(app.translator.trans('core.forum.log_in.username_or_phone_or_email_placeholder')),
                     bidi: this.identification,
                     disabled: this.loading })
                 ),
@@ -24019,8 +24361,8 @@ System.register('flarum/components/LogInModal', ['flarum/components/Modal', 'fla
         }, {
           key: 'forgotPassword',
           value: function forgotPassword() {
-            var email = this.identification();
-            var props = email.indexOf('@') !== -1 ? { email: email } : undefined;
+            var phone = this.identification();
+            var props = phone.indexOf('@') !== -1 ? { phone: phone } : undefined;
 
             app.modal.show(new ForgotPasswordModal(props));
           }
@@ -24028,8 +24370,18 @@ System.register('flarum/components/LogInModal', ['flarum/components/Modal', 'fla
           key: 'signUp',
           value: function signUp() {
             var props = { password: this.password() };
-            var identification = this.identification();
-            props[identification.indexOf('@') !== -1 ? 'email' : 'username'] = identification;
+            var identification = this.identification().trim();
+
+            if (/^(\+?)\d+$/.test(identification)) {
+              var _callingCodes$parsePh = callingCodes.parsePhone(identification),
+                  countryCode = _callingCodes$parsePh.countryCode,
+                  phoneNumber = _callingCodes$parsePh.phoneNumber;
+
+              props.country_code = countryCode;
+              props.phone_number = phoneNumber;
+            } else if (identification.indexOf('@') === -1) {
+              props.username = identification;
+            }
 
             app.modal.show(new SignUpModal(props));
           }
@@ -24512,10 +24864,10 @@ System.register('flarum/components/Notification', ['flarum/Component', 'flarum/h
 });;
 'use strict';
 
-System.register('flarum/components/NotificationGrid', ['flarum/Component', 'flarum/components/Checkbox', 'flarum/helpers/icon', 'flarum/utils/ItemList'], function (_export, _context) {
+System.register('flarum/components/NotificationGrid', ['flarum/Component', 'flarum/components/Checkbox', 'flarum/helpers/icon', 'flarum/utils/ItemList', 'flarum/utils/string'], function (_export, _context) {
   "use strict";
 
-  var Component, Checkbox, icon, ItemList, NotificationGrid;
+  var Component, Checkbox, icon, ItemList, stringify, NotificationGrid;
   return {
     setters: [function (_flarumComponent) {
       Component = _flarumComponent.default;
@@ -24525,6 +24877,8 @@ System.register('flarum/components/NotificationGrid', ['flarum/Component', 'flar
       icon = _flarumHelpersIcon.default;
     }, function (_flarumUtilsItemList) {
       ItemList = _flarumUtilsItemList.default;
+    }, function (_flarumUtilsString) {
+      stringify = _flarumUtilsString.stringify;
     }],
     execute: function () {
       NotificationGrid = function (_Component) {
@@ -24545,7 +24899,11 @@ System.register('flarum/components/NotificationGrid', ['flarum/Component', 'flar
              *
              * @type {Array}
              */
-            this.methods = [{ name: 'alert', icon: 'bell', label: app.translator.trans('core.forum.settings.notify_by_web_heading') }, { name: 'email', icon: 'envelope-o', label: app.translator.trans('core.forum.settings.notify_by_email_heading') }];
+            if (stringify(app.session.user.email()).length) {
+              this.methods = [{ name: 'alert', icon: 'bell', label: app.translator.trans('core.forum.settings.notify_by_web_heading') }, { name: 'email', icon: 'envelope-o', label: app.translator.trans('core.forum.settings.notify_by_email_heading') }];
+            } else {
+              this.methods = [{ name: 'alert', icon: 'bell', label: app.translator.trans('core.forum.settings.notify_by_web_heading') }];
+            }
 
             /**
              * A map of notification type-method combinations to the checkbox instances
@@ -27246,6 +27604,214 @@ System.register('flarum/components/RequestErrorModal', ['flarum/components/Modal
 });;
 'use strict';
 
+System.register('flarum/components/ResetPasswordModal', ['flarum/components/Modal', 'flarum/components/Button', 'flarum/components/LogInButtons', 'flarum/utils/extractText'], function (_export, _context) {
+  "use strict";
+
+  var Modal, Button, LogInButtons, extractText, ResetPasswordModal;
+  return {
+    setters: [function (_flarumComponentsModal) {
+      Modal = _flarumComponentsModal.default;
+    }, function (_flarumComponentsButton) {
+      Button = _flarumComponentsButton.default;
+    }, function (_flarumComponentsLogInButtons) {
+      LogInButtons = _flarumComponentsLogInButtons.default;
+    }, function (_flarumUtilsExtractText) {
+      extractText = _flarumUtilsExtractText.default;
+    }],
+    execute: function () {
+      ResetPasswordModal = function (_Modal) {
+        babelHelpers.inherits(ResetPasswordModal, _Modal);
+
+        function ResetPasswordModal() {
+          babelHelpers.classCallCheck(this, ResetPasswordModal);
+          return babelHelpers.possibleConstructorReturn(this, (ResetPasswordModal.__proto__ || Object.getPrototypeOf(ResetPasswordModal)).apply(this, arguments));
+        }
+
+        babelHelpers.createClass(ResetPasswordModal, [{
+          key: 'init',
+          value: function init() {
+            babelHelpers.get(ResetPasswordModal.prototype.__proto__ || Object.getPrototypeOf(ResetPasswordModal.prototype), 'init', this).call(this);
+
+            /**
+             * Whether or not the password has been reset successfully.
+             *
+             * @type {Boolean}
+             */
+            this.success = false;
+
+            /**
+             * The value of the phone input.
+             *
+             * @type {Function}
+             */
+            this.phone = m.prop(this.props.phone || '');
+
+            /**
+             * The value of the verification code input.
+             *
+             * @type {Function}
+             */
+            this.verification_code = m.prop(this.props.verification_code || '');
+
+            /**
+             * The value of the password input.
+             *
+             * @type {Function}
+             */
+            this.password = m.prop('');
+
+            /**
+             * The value of the password confirmation input.
+             *
+             * @type {Function}
+             */
+            this.passwordConfirmation = m.prop('');
+          }
+        }, {
+          key: 'className',
+          value: function className() {
+            return 'LogInModal Modal--small';
+          }
+        }, {
+          key: 'title',
+          value: function title() {
+            return app.translator.trans('core.forum.reset.title');
+          }
+        }, {
+          key: 'content',
+          value: function content() {
+            if (this.success) {
+              return m(
+                'div',
+                { className: 'Modal-body' },
+                m(
+                  'div',
+                  { className: 'Form Form--centered' },
+                  m(
+                    'p',
+                    { className: 'helpText' },
+                    app.translator.trans('core.forum.reset.password_has_reset_message')
+                  ),
+                  m(
+                    'div',
+                    { className: 'Form-group' },
+                    m(
+                      Button,
+                      {
+                        className: 'Button Button--primary Button--block',
+                        loading: this.loading,
+                        onclick: this.logIn.bind(this) },
+                      app.translator.trans('core.forum.reset.dismiss_button')
+                    )
+                  )
+                )
+              );
+            }
+
+            return [m(
+              'div',
+              { className: 'Modal-body' },
+              m(LogInButtons, null),
+              m(
+                'div',
+                { className: 'Form Form--centered' },
+                m(
+                  'div',
+                  { className: 'Form-group' },
+                  m('input', { className: 'FormControl', name: 'verification_code', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
+                    onchange: m.withAttr('value', this.verification_code),
+                    disabled: this.loading })
+                ),
+                m(
+                  'div',
+                  { className: 'Form-group' },
+                  m('input', { className: 'FormControl', name: 'password', type: 'password', placeholder: extractText(app.translator.trans('core.forum.reset.password_placeholder')),
+                    bidi: this.password,
+                    disabled: this.loading })
+                ),
+                m(
+                  'div',
+                  { className: 'Form-group' },
+                  m('input', { className: 'FormControl', name: 'password_confirmation', type: 'password', placeholder: extractText(app.translator.trans('core.forum.reset.confirm_password_placeholder')),
+                    bidi: this.passwordConfirmation,
+                    disabled: this.loading })
+                ),
+                m(
+                  'div',
+                  { className: 'Form-group' },
+                  Button.component({
+                    className: 'Button Button--primary Button--block',
+                    type: 'submit',
+                    loading: this.loading,
+                    children: app.translator.trans('core.forum.reset.submit_button')
+                  })
+                )
+              )
+            )];
+          }
+        }, {
+          key: 'onready',
+          value: function onready() {
+            this.$('[name=verification_code]').select();
+          }
+        }, {
+          key: 'onsubmit',
+          value: function onsubmit(e) {
+            var _this2 = this;
+
+            e.preventDefault();
+
+            this.loading = true;
+            this.alert = null;
+
+            app.request({
+              method: 'POST',
+              url: app.forum.attribute('baseUrl') + '/reset',
+              data: {
+                phone: this.phone(),
+                verification_code: this.verification_code(),
+                password: this.password(),
+                password_confirmation: this.passwordConfirmation()
+              },
+              errorHandler: this.onerror.bind(this)
+            }).then(function () {
+              _this2.success = true;
+            }).catch(function () {}).then(this.loaded.bind(this));
+          }
+        }, {
+          key: 'onerror',
+          value: function onerror(error) {
+            if (error.status === 401) {
+              error.alert.props.children = app.translator.trans('core.forum.log_in.invalid_login_message');
+            }
+
+            babelHelpers.get(ResetPasswordModal.prototype.__proto__ || Object.getPrototypeOf(ResetPasswordModal.prototype), 'onerror', this).call(this, error);
+          }
+        }, {
+          key: 'logIn',
+          value: function logIn(e) {
+            e.preventDefault();
+
+            this.loading = true;
+
+            var identification = this.phone();
+            var password = this.password();
+            var remember = false;
+
+            app.session.login({ identification: identification, password: password, remember: remember }, { errorHandler: this.onerror.bind(this) }).then(function () {
+              return window.location.reload();
+            }, this.loaded.bind(this));
+          }
+        }]);
+        return ResetPasswordModal;
+      }(Modal);
+
+      _export('default', ResetPasswordModal);
+    }
+  };
+});;
+'use strict';
+
 System.register('flarum/components/Search', ['flarum/Component', 'flarum/components/LoadingIndicator', 'flarum/utils/ItemList', 'flarum/utils/classList', 'flarum/utils/extractText', 'flarum/utils/KeyboardNavigatable', 'flarum/helpers/icon', 'flarum/components/DiscussionsSearchSource', 'flarum/components/UsersSearchSource'], function (_export, _context) {
   "use strict";
 
@@ -27825,10 +28391,10 @@ System.register('flarum/components/SessionDropdown', ['flarum/helpers/avatar', '
 });;
 'use strict';
 
-System.register('flarum/components/SettingsPage', ['flarum/components/UserPage', 'flarum/utils/ItemList', 'flarum/components/Switch', 'flarum/components/Button', 'flarum/components/FieldSet', 'flarum/components/NotificationGrid', 'flarum/components/ChangePasswordModal', 'flarum/components/ChangeEmailModal', 'flarum/helpers/listItems'], function (_export, _context) {
+System.register('flarum/components/SettingsPage', ['flarum/components/UserPage', 'flarum/utils/ItemList', 'flarum/components/Switch', 'flarum/components/Button', 'flarum/components/FieldSet', 'flarum/components/NotificationGrid', 'flarum/components/ChangePasswordModal', 'flarum/components/ChangeEmailModal', 'flarum/components/ChangePhoneModal', 'flarum/helpers/listItems'], function (_export, _context) {
   "use strict";
 
-  var UserPage, ItemList, Switch, Button, FieldSet, NotificationGrid, ChangePasswordModal, ChangeEmailModal, listItems, SettingsPage;
+  var UserPage, ItemList, Switch, Button, FieldSet, NotificationGrid, ChangePasswordModal, ChangeEmailModal, ChangePhoneModal, listItems, SettingsPage;
   return {
     setters: [function (_flarumComponentsUserPage) {
       UserPage = _flarumComponentsUserPage.default;
@@ -27846,6 +28412,8 @@ System.register('flarum/components/SettingsPage', ['flarum/components/UserPage',
       ChangePasswordModal = _flarumComponentsChangePasswordModal.default;
     }, function (_flarumComponentsChangeEmailModal) {
       ChangeEmailModal = _flarumComponentsChangeEmailModal.default;
+    }, function (_flarumComponentsChangePhoneModal) {
+      ChangePhoneModal = _flarumComponentsChangePhoneModal.default;
     }, function (_flarumHelpersListItems) {
       listItems = _flarumHelpersListItems.default;
     }],
@@ -27908,6 +28476,14 @@ System.register('flarum/components/SettingsPage', ['flarum/components/UserPage',
           key: 'accountItems',
           value: function accountItems() {
             var items = new ItemList();
+
+            items.add('changePhone', Button.component({
+              children: app.translator.trans('core.forum.settings.change_phone_button'),
+              className: 'Button',
+              onclick: function onclick() {
+                return app.modal.show(new ChangePhoneModal());
+              }
+            }));
 
             items.add('changePassword', Button.component({
               children: app.translator.trans('core.forum.settings.change_password_button'),
@@ -27979,23 +28555,23 @@ System.register('flarum/components/SettingsPage', ['flarum/components/UserPage',
 });;
 'use strict';
 
-System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'flarum/components/LogInModal', 'flarum/helpers/avatar', 'flarum/components/Button', 'flarum/components/LogInButtons', 'flarum/utils/extractText'], function (_export, _context) {
+System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'flarum/components/LogInModal', 'flarum/components/Button', 'flarum/components/LogInButtons', 'flarum/utils/extractText', 'flarum/utils/callingCodes'], function (_export, _context) {
   "use strict";
 
-  var Modal, LogInModal, avatar, Button, LogInButtons, extractText, SignUpModal;
+  var Modal, LogInModal, Button, LogInButtons, extractText, callingCodes, SignUpModal;
   return {
     setters: [function (_flarumComponentsModal) {
       Modal = _flarumComponentsModal.default;
     }, function (_flarumComponentsLogInModal) {
       LogInModal = _flarumComponentsLogInModal.default;
-    }, function (_flarumHelpersAvatar) {
-      avatar = _flarumHelpersAvatar.default;
     }, function (_flarumComponentsButton) {
       Button = _flarumComponentsButton.default;
     }, function (_flarumComponentsLogInButtons) {
       LogInButtons = _flarumComponentsLogInButtons.default;
     }, function (_flarumUtilsExtractText) {
       extractText = _flarumUtilsExtractText.default;
+    }, function (_flarumUtilsCallingCodes) {
+      callingCodes = _flarumUtilsCallingCodes.default;
     }],
     execute: function () {
       SignUpModal = function (_Modal) {
@@ -28012,6 +28588,27 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
             babelHelpers.get(SignUpModal.prototype.__proto__ || Object.getPrototypeOf(SignUpModal.prototype), 'init', this).call(this);
 
             /**
+             * The value of the country code input.
+             *
+             * @type {Function}
+             */
+            this.country_code = m.prop(this.props.country_code || callingCodes.items[0].code);
+
+            /**
+             * The value of the phone number input.
+             *
+             * @type {Function}
+             */
+            this.phone_number = m.prop(this.props.phone_number || '');
+
+            /**
+             * The value of the verification code input.
+             *
+             * @type {Function}
+             */
+            this.verification_code = m.prop(this.props.verification_code || '');
+
+            /**
              * The value of the username input.
              *
              * @type {Function}
@@ -28019,18 +28616,13 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
             this.username = m.prop(this.props.username || '');
 
             /**
-             * The value of the email input.
-             *
-             * @type {Function}
-             */
-            this.email = m.prop(this.props.email || '');
-
-            /**
              * The value of the password input.
              *
              * @type {Function}
              */
             this.password = m.prop(this.props.password || '');
+
+            this.step = 1;
           }
         }, {
           key: 'className',
@@ -28058,46 +28650,126 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
         }, {
           key: 'body',
           value: function body() {
-            return [this.props.token ? '' : m(LogInButtons, null), m(
+            var items = [];
+
+            callingCodes.items.forEach(function (item) {
+              items.push(m(
+                'option',
+                { value: item.code },
+                item.name,
+                ' (+',
+                item.code,
+                ')'
+              ));
+            });
+
+            return [
+            // this.props.token ? '' : <LogInButtons/>,
+            m(LogInButtons, null), m(
               'div',
               { className: 'Form Form--centered' },
-              m(
+              this.step === 1 ? [m(
+                'p',
+                { className: 'helpText' },
+                extractText(app.translator.trans('core.lib.phone_verification.verification_text'))
+              ), m(
+                'div',
+                { className: 'Form-group' },
+                m(
+                  'select',
+                  { className: 'FormControl', name: 'country_code', value: this.country_code(),
+                    onchange: m.withAttr('value', this.country_code),
+                    disabled: this.loading },
+                  items
+                )
+              ), m(
+                'div',
+                { className: 'Form-group' },
+                m('input', { className: 'FormControl', name: 'phone_number', type: 'tel', placeholder: extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder')),
+                  value: this.phone_number(),
+                  onchange: m.withAttr('value', this.phone_number),
+                  disabled: this.loading })
+              )] : '',
+              this.step === 2 ? [m(
+                'p',
+                { className: 'helpText' },
+                extractText(app.translator.trans('core.lib.phone_verification.verification_text'))
+              ), m(
+                'div',
+                { className: 'Form-group' },
+                m(
+                  'p',
+                  null,
+                  '+',
+                  this.country_code(),
+                  ' ',
+                  this.phone_number()
+                )
+              ), m(
+                'div',
+                { className: 'Form-group' },
+                m('input', { className: 'FormControl', name: 'verification_code', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
+                  onchange: m.withAttr('value', this.verification_code),
+                  disabled: this.loading })
+              )] : '',
+              this.step === 3 ? [m(
+                'div',
+                { className: 'Form-group' },
+                m(
+                  'p',
+                  null,
+                  '+',
+                  this.country_code(),
+                  ' ',
+                  this.phone_number()
+                )
+              ), m(
                 'div',
                 { className: 'Form-group' },
                 m('input', { className: 'FormControl', name: 'username', type: 'text', placeholder: extractText(app.translator.trans('core.forum.sign_up.username_placeholder')),
                   value: this.username(),
                   onchange: m.withAttr('value', this.username),
                   disabled: this.loading })
-              ),
-              m(
-                'div',
-                { className: 'Form-group' },
-                m('input', { className: 'FormControl', name: 'email', type: 'email', placeholder: extractText(app.translator.trans('core.forum.sign_up.email_placeholder')),
-                  value: this.email(),
-                  onchange: m.withAttr('value', this.email),
-                  disabled: this.loading || this.props.token && this.props.email })
-              ),
-              this.props.token ? '' : m(
+              ), m(
                 'div',
                 { className: 'Form-group' },
                 m('input', { className: 'FormControl', name: 'password', type: 'password', placeholder: extractText(app.translator.trans('core.forum.sign_up.password_placeholder')),
                   value: this.password(),
                   onchange: m.withAttr('value', this.password),
                   disabled: this.loading })
-              ),
+              )] : '',
               m(
                 'div',
                 { className: 'Form-group' },
+                this.step > 1 ? m(
+                  Button,
+                  {
+                    className: 'Button Button--text',
+                    onclick: this.back.bind(this),
+                    disabled: this.loading,
+                    type: 'button', style: 'float: left;' },
+                  'Back'
+                ) : '',
                 m(
                   Button,
                   {
-                    className: 'Button Button--primary Button--block',
-                    type: 'submit',
+                    className: 'Button Button--primary',
+                    type: 'submit', style: 'float: right;',
                     loading: this.loading },
-                  app.translator.trans('core.forum.sign_up.submit_button')
+                  app.translator.trans(this.step === 3 ? 'core.forum.sign_up.submit_button' : 'core.forum.sign_up.next_button')
                 )
               )
             )];
+          }
+        }, {
+          key: 'back',
+          value: function back() {
+            if (this.step === 3) {
+              this.step = 1;
+            } else {
+              this.step--;
+            }
+            m.redraw();
           }
         }, {
           key: 'footer',
@@ -28112,8 +28784,7 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
           key: 'logIn',
           value: function logIn() {
             var props = {
-              identification: this.email() || this.username(),
-              password: this.password()
+              identification: this.phone_number() ? '+' + this.country_code() + this.phone_number() : ''
             };
 
             app.modal.show(new LogInModal(props));
@@ -28121,8 +28792,8 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
         }, {
           key: 'onready',
           value: function onready() {
-            if (this.props.username && !this.props.email) {
-              this.$('[name=email]').select();
+            if (this.props.username && !this.props.phone_number) {
+              this.$('[name=phone_number]').select();
             } else {
               this.$('[name=username]').select();
             }
@@ -28130,37 +28801,56 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
         }, {
           key: 'onsubmit',
           value: function onsubmit(e) {
+            var _this2 = this;
+
             e.preventDefault();
 
+            this.alert = null;
             this.loading = true;
 
             var data = this.submitData();
 
+            var path = '';
+            switch (this.step) {
+              case 1:
+                path = '/register/verification/start';
+                break;
+              case 2:
+                path = '/register/verification/check';
+                break;
+              case 3:
+                path = '/register';
+                break;
+            }
+
             app.request({
-              url: app.forum.attribute('baseUrl') + '/register',
+              url: app.forum.attribute('baseUrl') + path,
               method: 'POST',
               data: data,
               errorHandler: this.onerror.bind(this)
             }).then(function () {
-              return window.location.reload();
+              if (_this2.step === 3) {
+                window.location.reload();
+              } else {
+                _this2.step++;
+                _this2.loaded();
+              }
             }, this.loaded.bind(this));
           }
         }, {
           key: 'submitData',
           value: function submitData() {
             var data = {
-              username: this.username(),
-              email: this.email()
+              phone: '' + this.country_code() + this.phone_number()
             };
 
-            if (this.props.token) {
-              data.token = this.props.token;
-            } else {
-              data.password = this.password();
+            if (this.step === 2) {
+              data.verification_code = this.verification_code();
             }
 
-            if (this.props.avatarUrl) {
-              data.avatarUrl = this.props.avatarUrl;
+            if (this.step === 3) {
+              data.username = this.username();
+              data.password = this.password();
             }
 
             return data;
@@ -30537,6 +31227,7 @@ System.register('flarum/models/User', ['flarum/Model', 'flarum/utils/stringToCol
       babelHelpers.extends(User.prototype, {
         username: Model.attribute('username'),
         email: Model.attribute('email'),
+        phone: Model.attribute('phone'),
         isActivated: Model.attribute('isActivated'),
         password: Model.attribute('password'),
 
@@ -30647,7 +31338,7 @@ System.register('flarum/Session', [], function (_export, _context) {
         /**
          * Attempt to log in a user.
          *
-         * @param {String} identification The username/email.
+         * @param {String} identification The username/phone/email.
          * @param {String} password
          * @param {Object} [options]
          * @return {Promise}
@@ -31219,6 +31910,322 @@ System.register("flarum/utils/anchorScroll", [], function (_export, _context) {
   return {
     setters: [],
     execute: function () {}
+  };
+});;
+'use strict';
+
+System.register('flarum/utils/callingCodes', [], function (_export, _context) {
+  "use strict";
+
+  var codes, countries, items, CallingCodes;
+  return {
+    setters: [],
+    execute: function () {
+      codes = {
+        af: [93],
+        al: [355],
+        dz: [213],
+        as: [1684],
+        ad: [376],
+        ao: [244],
+        ai: [1264],
+        aq: [672],
+        ag: [1268],
+        ar: [54],
+        am: [374],
+        aw: [297],
+        au: [61],
+        at: [43],
+        az: [994],
+        bs: [1242],
+        bh: [973],
+        bd: [880],
+        bb: [1246],
+        by: [375],
+        be: [32],
+        bz: [501],
+        bj: [229],
+        bm: [1441],
+        bt: [975],
+        bo: [591],
+        ba: [387],
+        bw: [267],
+        br: [55],
+        io: [246],
+        vg: [1284],
+        bn: [673],
+        bg: [359],
+        bf: [226],
+        bi: [257],
+        kh: [855],
+        cm: [237],
+        ca: [1],
+        cv: [238],
+        ky: [1345],
+        cf: [236],
+        td: [235],
+        cl: [56],
+        cn: [86],
+        cx: [61],
+        cc: [61],
+        co: [57],
+        km: [269],
+        ck: [682],
+        cr: [506],
+        hr: [385],
+        cu: [53],
+        cw: [599],
+        cy: [357],
+        cz: [420],
+        cd: [243],
+        dk: [45],
+        dj: [253],
+        dm: [1767],
+        do: [1809, 1829, 1849],
+        tl: [670],
+        ec: [593],
+        eg: [20],
+        sv: [503],
+        gq: [240],
+        er: [291],
+        ee: [372],
+        et: [251],
+        fk: [500],
+        fo: [298],
+        fj: [679],
+        fi: [358],
+        fr: [33],
+        pf: [689],
+        ga: [241],
+        gm: [220],
+        ge: [995],
+        de: [49],
+        gh: [233],
+        gi: [350],
+        gr: [30],
+        gl: [299],
+        gd: [1473],
+        gu: [1671],
+        gt: [502],
+        gg: [44],
+        gn: [224],
+        gw: [245],
+        gy: [592],
+        ht: [509],
+        hn: [504],
+        hk: [852],
+        hu: [36],
+        is: [354],
+        in: [91],
+        id: [62],
+        ir: [98],
+        iq: [964],
+        ie: [353],
+        im: [44],
+        il: [972],
+        it: [39],
+        ci: [225],
+        jm: [1876],
+        jp: [81],
+        je: [44],
+        jo: [962],
+        kz: [7],
+        ke: [254],
+        ki: [686],
+        xk: [383],
+        kw: [965],
+        kg: [996],
+        la: [856],
+        lv: [371],
+        lb: [961],
+        ls: [266],
+        lr: [231],
+        ly: [218],
+        li: [423],
+        lt: [370],
+        lu: [352],
+        mo: [853],
+        mk: [389],
+        mg: [261],
+        mw: [265],
+        my: [60],
+        mv: [960],
+        ml: [223],
+        mt: [356],
+        mh: [692],
+        mr: [222],
+        mu: [230],
+        yt: [262],
+        mx: [52],
+        fm: [691],
+        md: [373],
+        mc: [377],
+        mn: [976],
+        me: [382],
+        ms: [1664],
+        ma: [212],
+        mz: [258],
+        mm: [95],
+        na: [264],
+        nr: [674],
+        np: [977],
+        nl: [31],
+        an: [599],
+        nc: [687],
+        nz: [64],
+        ni: [505],
+        ne: [227],
+        ng: [234],
+        nu: [683],
+        kp: [850],
+        mp: [1670],
+        no: [47],
+        om: [968],
+        pk: [92],
+        pw: [680],
+        ps: [970],
+        pa: [507],
+        pg: [675],
+        py: [595],
+        pe: [51],
+        ph: [63],
+        pn: [64],
+        pl: [48],
+        pt: [351],
+        pr: [1787],
+        qa: [974],
+        cg: [242],
+        re: [262],
+        ro: [40],
+        ru: [7],
+        rw: [250],
+        bl: [590],
+        sh: [290],
+        kn: [1869],
+        lc: [1758],
+        mf: [590],
+        pm: [508],
+        vc: [1784],
+        ws: [685],
+        sm: [378],
+        st: [239],
+        sa: [966],
+        sn: [221],
+        rs: [381],
+        sc: [248],
+        sl: [232],
+        sg: [65],
+        sx: [1721],
+        sk: [421],
+        si: [386],
+        sb: [677],
+        so: [252],
+        za: [27],
+        kr: [82],
+        ss: [211],
+        es: [34],
+        lk: [94],
+        sd: [249],
+        sr: [597],
+        sj: [47],
+        sz: [268],
+        se: [46],
+        ch: [41],
+        sy: [963],
+        tw: [886],
+        tj: [992],
+        tz: [255],
+        th: [66],
+        tg: [228],
+        tk: [690],
+        to: [676],
+        tt: [1868],
+        tn: [216],
+        tr: [90],
+        tm: [993],
+        tc: [1649],
+        tv: [688],
+        vi: [1340],
+        ug: [256],
+        ua: [380],
+        ae: [971],
+        gb: [44],
+        us: [1],
+        uy: [598],
+        uz: [998],
+        vu: [678],
+        va: [379],
+        ve: [58],
+        vn: [84],
+        wf: [681],
+        eh: [212],
+        ye: [967],
+        zm: [260],
+        zw: [263],
+        mq: [596],
+        gp: [590],
+        gf: [594],
+        int: [882]
+      };
+      countries = ['af', 'al', 'dz', 'ad', 'ao', 'ai', 'ag', 'ar', 'am', 'aw', 'au', 'at', 'az', 'bs', 'bh', 'bd', 'bb', 'by', 'be', 'bz', 'bj', 'bm', 'bt', 'bo', 'ba', 'bw', 'br', 'vg', 'bn', 'bg', 'bf', 'bi', 'cv', 'kh', 'cm', 'ca', 'ky', 'cf', 'td', 'cl', 'cn', 'co', 'cg', 'cd', 'km', 'ck', 'cr', 'hr', 'cu', 'cz', 'dk', 'dj', 'dm', 'do', 'ec', 'eg', 'sv', 'ee', 'et', 'fk', 'fo', 'fj', 'fi', 'fr', 'gf', 'pf', 'ga', 'gm', 'ge', 'de', 'gh', 'gi', 'gr', 'gl', 'gd', 'gp', 'gu', 'gt', 'gg', 'gn', 'gw', 'gy', 'ht', 'hn', 'hk', 'hu', 'is', 'in', 'id', 'int', 'ir', 'iq', 'ie', 'im', 'il', 'it', 'ci', 'jm', 'jp', 'je', 'jo', 'kz', 'ke', 'kw', 'kg', 'la', 'lv', 'lb', 'ls', 'lr', 'ly', 'li', 'lt', 'lu', 'mo', 'mk', 'mg', 'mw', 'my', 'mv', 'ml', 'mt', 'mq', 'mr', 'mu', 'yt', 'mx', 'md', 'mc', 'mn', 'me', 'ms', 'ma', 'mz', 'mm', 'na', 'nr', 'np', 'nl', 'an', 'nc', 'nz', 'ni', 'ne', 'ng', 'kp', 'no', 'om', 'pk', 'ps', 'pa', 'pg', 'py', 'pe', 'ph', 'pl', 'pt', 'pr', 'qa', 're', 'ro', 'ru', 'rw', 'kn', 'lc', 'ws', 'sm', 'st', 'sa', 'sn', 'rs', 'sc', 'sl', 'sg', 'sk', 'si', 'sb', 'so', 'za', 'kr', 'es', 'lk', 'vc', 'sd', 'sr', 'sz', 'se', 'ch', 'sy', 'tw', 'tj', 'tz', 'th', 'tl', 'tg', 'to', 'tt', 'tn', 'tr', 'tm', 'tc', 'ug', 'ua', 'ae', 'gb', 'us', 'uy', 'uz', 'vu', 've', 'vn', 'ye', 'zm', 'zw'];
+      items = [];
+
+      CallingCodes = function () {
+        function CallingCodes() {
+          babelHelpers.classCallCheck(this, CallingCodes);
+        }
+
+        babelHelpers.createClass(CallingCodes, null, [{
+          key: 'parsePhone',
+          value: function parsePhone(phone) {
+            var defaultCountryCode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.items[0].code;
+
+            var countryCode = '';
+            phone = phone.replace('+', '');
+            this.items.forEach(function (item) {
+              var pattern = new RegExp('^' + item.code + '\\d+');
+              if (pattern.test(phone) && item.code.toString().length > countryCode.length) {
+                countryCode = item.code.toString();
+              }
+            });
+            if (countryCode.length === 0) {
+              countryCode = defaultCountryCode.toString();
+            }
+            return {
+              countryCode: Number(countryCode),
+              phoneNumber: phone.length > countryCode.length ? phone.substring(countryCode.length) : ''
+            };
+          }
+        }, {
+          key: 'items',
+          get: function get() {
+            if (items.length === 0) {
+              countries.forEach(function (country) {
+                codes[country].forEach(function (code) {
+                  items.push({
+                    name: app.translator.trans('core.lib.countries.' + country),
+                    code: code
+                  });
+                });
+              });
+              items.sort(function (a, b) {
+                if (a.name < b.name) {
+                  return -1;
+                } else if (a.name > b.name) {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              });
+            }
+            return items;
+          }
+        }]);
+        return CallingCodes;
+      }();
+
+      _export('default', CallingCodes);
+    }
   };
 });;
 'use strict';
@@ -32733,6 +33740,11 @@ System.register('flarum/utils/string', [], function (_export, _context) {
 
     return dom.text().replace(/\s+/g, ' ').trim();
   }
+  _export('getPlainContent', getPlainContent);
+
+  function stringify(input) {
+    return !input ? '' : String(input);
+  }
 
   /**
    * An array of DOM selectors to remove when getting plain content.
@@ -32740,7 +33752,7 @@ System.register('flarum/utils/string', [], function (_export, _context) {
    * @type {Array}
    */
 
-  _export('getPlainContent', getPlainContent);
+  _export('stringify', stringify);
 
   /**
    * Make a string's first character uppercase.

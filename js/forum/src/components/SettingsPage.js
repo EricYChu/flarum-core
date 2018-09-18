@@ -6,6 +6,7 @@ import FieldSet from 'flarum/components/FieldSet';
 import NotificationGrid from 'flarum/components/NotificationGrid';
 import ChangePasswordModal from 'flarum/components/ChangePasswordModal';
 import ChangeEmailModal from 'flarum/components/ChangeEmailModal';
+import ChangePhoneModal from 'flarum/components/ChangePhoneModal';
 import listItems from 'flarum/helpers/listItems';
 
 /**
@@ -70,6 +71,14 @@ export default class SettingsPage extends UserPage {
    */
   accountItems() {
     const items = new ItemList();
+
+    items.add('changePhone',
+      Button.component({
+        children: app.translator.trans('core.forum.settings.change_phone_button'),
+        className: 'Button',
+        onclick: () => app.modal.show(new ChangePhoneModal())
+      })
+    );
 
     items.add('changePassword',
       Button.component({

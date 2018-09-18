@@ -24,7 +24,7 @@ export default class Session {
   /**
    * Attempt to log in a user.
    *
-   * @param {String} identification The username/email.
+   * @param {String} identification The username/phone/email.
    * @param {String} password
    * @param {Object} [options]
    * @return {Promise}

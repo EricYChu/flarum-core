@@ -23,6 +23,7 @@ class CurrentUserSerializer extends UserSerializer
         $attributes += [
             'isActivated'              => (bool) $user->is_activated,
             'email'                    => $user->email,
+            'phone'                    => $user->phone,
             'readTime'                 => $this->formatDate($user->read_time),
             'unreadNotificationsCount' => (int) $user->getUnreadNotificationsCount(),
             'newNotificationsCount'    => (int) $user->getNewNotificationsCount(),

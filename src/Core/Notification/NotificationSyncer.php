@@ -199,7 +199,7 @@ class NotificationSyncer
     protected function mailNotifications(MailableInterface $blueprint, array $recipients)
     {
         foreach ($recipients as $user) {
-            if ($user->shouldEmail($blueprint::getType())) {
+            if (!empty($user->email) and $user->shouldEmail($blueprint::getType())) {
                 $this->mailer->send($blueprint, $user);
             }
         }

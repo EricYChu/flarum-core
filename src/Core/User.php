@@ -25,6 +25,8 @@ use Flarum\Event\UserBioWasChanged;
 use Flarum\Event\UserEmailChangeWasRequested;
 use Flarum\Event\UserEmailWasChanged;
 use Flarum\Event\UserPasswordWasChanged;
+use Flarum\Event\UserPhoneChangeWasRequested;
+use Flarum\Event\UserPhoneWasChanged;
 use Flarum\Event\UserWasActivated;
 use Flarum\Event\UserWasDeleted;
 use Flarum\Event\UserWasRegistered;
@@ -36,6 +38,7 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 /**
  * @property int $id
  * @property string $username
+ * @property string $phone
  * @property string $email
  * @property bool $is_activated
  * @property string $password
@@ -153,16 +156,16 @@ class User extends AbstractModel
      * Register a new user.
      *
      * @param string $username
-     * @param string $email
+     * @param string $phone
      * @param string $password
      * @return static
      */
-    public static function register($username, $email, $password)
+    public static function register($username, $phone, $password)
     {
         $user = new static;
 
         $user->username = $username;
-        $user->email = $email;
+        $user->phone = $phone;
         $user->password = $password;
         $user->join_time = time();
 
@@ -199,6 +202,38 @@ class User extends AbstractModel
             $this->username = $username;
 
             $this->raise(new UserWasRenamed($this));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Change the user's phone.
+     *
+     * @param string $phone
+     * @return $this
+     */
+    public function changePhone($phone)
+    {
+        if ($phone !== $this->phone) {
+            $this->phone = $phone;
+
+            $this->raise(new UserPhoneWasChanged($this));
+        }
+
+        return $this;
+    }
+
+    /**
+     * Request that the user's phone be changed.
+     *
+     * @param string $phone
+     * @return $this
+     */
+    public function requestPhoneChange($phone)
+    {
+        if ($phone !== $this->phone) {
+            $this->raise(new UserPhoneChangeWasRequested($this, $phone));
         }
 
         return $this;

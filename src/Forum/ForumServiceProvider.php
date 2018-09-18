@@ -101,27 +101,45 @@ class ForumServiceProvider extends AbstractServiceProvider
         );
 
         $routes->post(
+            '/register/verification/start',
+            'startRegisterVerification',
+            $route->toController(Controller\StartRegisterVerificationController::class)
+        );
+
+        $routes->post(
+            '/register/verification/check',
+            'checkRegisterVerification',
+            $route->toController(Controller\CheckRegisterVerificationController::class)
+        );
+
+        $routes->post(
             '/register',
             'register',
             $route->toController(Controller\RegisterController::class)
         );
 
+        $routes->post(
+            '/confirm/phone',
+            'confirmPhone',
+            $route->toController(Controller\ConfirmPhoneController::class)
+        );
+
         $routes->get(
-            '/confirm/{token}',
+            '/confirm/email/{token}',
             'confirmEmail',
             $route->toController(Controller\ConfirmEmailController::class)
         );
 
-        $routes->get(
-            '/reset/{token}',
-            'resetPassword',
-            $route->toController(Controller\ResetPasswordController::class)
-        );
+//        $routes->get(
+//            '/reset/{token}',
+//            'resetPassword',
+//            $route->toController(Controller\ResetPasswordController::class)
+//        );
 
         $routes->post(
             '/reset',
-            'savePassword',
-            $route->toController(Controller\SavePasswordController::class)
+            'resetPassword',
+            $route->toController(Controller\ResetPasswordController::class)
         );
 
         $this->app->make('events')->fire(

@@ -45,6 +45,10 @@ export function getPlainContent(string) {
   return dom.text().replace(/\s+/g, ' ').trim();
 }
 
+export function stringify(input) {
+  return (!input ? '' : String(input))
+}
+
 /**
  * An array of DOM selectors to remove when getting plain content.
  *

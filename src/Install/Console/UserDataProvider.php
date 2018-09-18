@@ -85,6 +85,8 @@ class UserDataProvider implements DataProviderInterface
             'forum_description' => '',
             'mail_driver' => 'mail',
             'mail_from' => 'noreply@'.preg_replace('/^www\./i', '', parse_url($baseUrl, PHP_URL_HOST)),
+            'sms_driver' => 'twilio',
+            'sms_twilio_verification_api_key' => '',
             'theme_colored_header' => '0',
             'theme_dark_mode' => '0',
             'theme_primary_color' => '#4D698E',

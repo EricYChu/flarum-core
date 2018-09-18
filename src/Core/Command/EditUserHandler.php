@@ -71,29 +71,46 @@ class EditUserHandler
             $user->rename($attributes['username']);
         }
 
-        if (isset($attributes['email'])) {
+        if (isset($attributes['email']) and $attributes['email'] !== $user->email) {
             if ($isSelf) {
                 $user->requestEmailChange($attributes['email']);
-
-                if ($attributes['email'] !== $user->email) {
-                    $validate['email'] = $attributes['email'];
-                }
             } else {
                 $this->assertPermission($canEdit);
                 $user->changeEmail($attributes['email']);
             }
+            $validate['email'] = $attributes['email'];
         }
 
-        if ($actor->isAdmin() && ! empty($attributes['isActivated'])) {
+        if (isset($attributes['phone']) and $attributes['phone'] !== $user->phone) {
+            if ($isSelf) {
+                $user->requestPhoneChange($attributes['phone']);
+            } else {
+                $this->assertPermission($canEdit);
+                $user->changePhone($attributes['phone']);
+            }
+            $validate['phone'] = $attributes['phone'];
+        }
+
+        if ($actor->isAdmin() and ! empty($attributes['isActivated'])) {
             $user->activate();
         }
 
         if (isset($attributes['password'])) {
-            $this->assertPermission($canEdit);
-            $user->changePassword($attributes['password']);
-
+            if ($isSelf) {
+                $user->changePassword($attributes['password']);
+            } else {
+                $this->assertPermission($canEdit);
+                $user->changePassword($attributes['password']);
+            }
             $validate['password'] = $attributes['password'];
         }
+
+//        if (isset($attributes['password'])) {
+//            $this->assertPermission($canEdit);
+//            $user->changePassword($attributes['password']);
+//
+//            $validate['password'] = $attributes['password'];
+//        }
 
         if (isset($attributes['bio'])) {
             if (! $isSelf) {
@@ -116,7 +133,7 @@ class EditUserHandler
             }
         }
 
-        if (isset($relationships['groups']['data']) && is_array($relationships['groups']['data'])) {
+        if (isset($relationships['groups']['data']) and is_array($relationships['groups']['data'])) {
             $this->assertPermission($canEdit);
 
             $newGroupIds = [];
