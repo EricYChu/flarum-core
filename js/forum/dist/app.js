@@ -23613,10 +23613,10 @@ System.register('flarum/components/HeaderSecondary', ['flarum/Component', 'flaru
 });;
 'use strict';
 
-System.register('flarum/components/IndexPage', ['flarum/extend', 'flarum/components/Page', 'flarum/utils/ItemList', 'flarum/helpers/listItems', 'flarum/helpers/icon', 'flarum/components/DiscussionList', 'flarum/components/DiscussionComposer', 'flarum/components/LogInModal', 'flarum/components/DiscussionPage', 'flarum/components/Dropdown', 'flarum/components/Button', 'flarum/components/LinkButton', 'flarum/components/SelectDropdown'], function (_export, _context) {
+System.register('flarum/components/IndexPage', ['flarum/extend', 'flarum/components/Page', 'flarum/utils/ItemList', 'flarum/helpers/listItems', 'flarum/helpers/icon', 'flarum/components/DiscussionList', 'flarum/components/WelcomeHero', 'flarum/components/DiscussionComposer', 'flarum/components/LogInModal', 'flarum/components/DiscussionPage', 'flarum/components/Dropdown', 'flarum/components/Button', 'flarum/components/LinkButton', 'flarum/components/SelectDropdown'], function (_export, _context) {
   "use strict";
 
-  var extend, Page, ItemList, listItems, icon, DiscussionList, DiscussionComposer, LogInModal, DiscussionPage, Dropdown, Button, LinkButton, SelectDropdown, IndexPage;
+  var extend, Page, ItemList, listItems, icon, DiscussionList, WelcomeHero, DiscussionComposer, LogInModal, DiscussionPage, Dropdown, Button, LinkButton, SelectDropdown, IndexPage;
   return {
     setters: [function (_flarumExtend) {
       extend = _flarumExtend.extend;
@@ -23630,6 +23630,8 @@ System.register('flarum/components/IndexPage', ['flarum/extend', 'flarum/compone
       icon = _flarumHelpersIcon.default;
     }, function (_flarumComponentsDiscussionList) {
       DiscussionList = _flarumComponentsDiscussionList.default;
+    }, function (_flarumComponentsWelcomeHero) {
+      WelcomeHero = _flarumComponentsWelcomeHero.default;
     }, function (_flarumComponentsDiscussionComposer) {
       DiscussionComposer = _flarumComponentsDiscussionComposer.default;
     }, function (_flarumComponentsLogInModal) {
@@ -23710,6 +23712,7 @@ System.register('flarum/components/IndexPage', ['flarum/extend', 'flarum/compone
             return m(
               'div',
               { className: 'IndexPage' },
+              this.hero(),
               m(
                 'div',
                 { className: 'container' },
@@ -23751,16 +23754,27 @@ System.register('flarum/components/IndexPage', ['flarum/extend', 'flarum/compone
 
             if (isInitialized) return;
 
+            extend(context, 'onunload', function () {
+              return $('#app').css('min-height', '');
+            });
+
             app.setTitle('');
             app.setTitleCount(0);
 
+            // Work out the difference between the height of this hero and that of the
+            // previous hero. Maintain the same scroll position relative to the bottom
+            // of the hero so that the sidebar doesn't jump around.
+            var oldHeroHeight = app.cache.heroHeight;
+            var heroHeight = app.cache.heroHeight = this.$('.Hero').outerHeight();
             var scrollTop = app.cache.scrollTop;
+
+            $('#app').css('min-height', $(window).height() + heroHeight);
 
             // Scroll to the remembered position. We do this after a short delay so that
             // it happens after the browser has done its own "back button" scrolling,
             // which isn't right. https://github.com/flarum/core/issues/835
             var scroll = function scroll() {
-              return $(window).scrollTop(scrollTop);
+              return $(window).scrollTop(scrollTop - oldHeroHeight + heroHeight);
             };
             scroll();
             setTimeout(scroll, 1);
@@ -23782,6 +23796,11 @@ System.register('flarum/components/IndexPage', ['flarum/extend', 'flarum/compone
                 }
               }
             }
+          }
+        }, {
+          key: 'hero',
+          value: function hero() {
+            return WelcomeHero.component();
           }
         }, {
           key: 'sidebarItems',
@@ -29636,6 +29655,86 @@ System.register('flarum/components/UsersSearchSource', ['flarum/helpers/highligh
       }();
 
       _export('default', UsersSearchResults);
+    }
+  };
+});;
+'use strict';
+
+System.register('flarum/components/WelcomeHero', ['flarum/Component', 'flarum/components/Button'], function (_export, _context) {
+  "use strict";
+
+  var Component, Button, WelcomeHero;
+  return {
+    setters: [function (_flarumComponent) {
+      Component = _flarumComponent.default;
+    }, function (_flarumComponentsButton) {
+      Button = _flarumComponentsButton.default;
+    }],
+    execute: function () {
+      WelcomeHero = function (_Component) {
+        babelHelpers.inherits(WelcomeHero, _Component);
+
+        function WelcomeHero() {
+          babelHelpers.classCallCheck(this, WelcomeHero);
+          return babelHelpers.possibleConstructorReturn(this, (WelcomeHero.__proto__ || Object.getPrototypeOf(WelcomeHero)).apply(this, arguments));
+        }
+
+        babelHelpers.createClass(WelcomeHero, [{
+          key: 'init',
+          value: function init() {
+            this.hidden = localStorage.getItem('welcomeHidden');
+          }
+        }, {
+          key: 'view',
+          value: function view() {
+            var _this2 = this;
+
+            if (this.hidden) return m('div', null);
+
+            var slideUp = function slideUp() {
+              _this2.$().slideUp(_this2.hide.bind(_this2));
+            };
+
+            return m(
+              'header',
+              { className: 'Hero WelcomeHero' },
+              m(
+                'div',
+                { 'class': 'container' },
+                Button.component({
+                  icon: 'times',
+                  onclick: slideUp,
+                  className: 'Hero-close Button Button--icon Button--link'
+                }),
+                m(
+                  'div',
+                  { className: 'containerNarrow' },
+                  m(
+                    'h2',
+                    { className: 'Hero-title' },
+                    app.forum.attribute('welcomeTitle')
+                  ),
+                  m(
+                    'div',
+                    { className: 'Hero-subtitle' },
+                    m.trust(app.forum.attribute('welcomeMessage'))
+                  )
+                )
+              )
+            );
+          }
+        }, {
+          key: 'hide',
+          value: function hide() {
+            localStorage.setItem('welcomeHidden', 'true');
+
+            this.hidden = true;
+          }
+        }]);
+        return WelcomeHero;
+      }(Component);
+
+      _export('default', WelcomeHero);
     }
   };
 });;
