@@ -20441,7 +20441,7 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
              *
              * @type {Function}
              */
-            this.verification_code = m.prop(this.props.verification_code || '');
+            this.verificationCode = m.prop(this.props.verificationCode || '');
 
             /**
              * The value of the password input.
@@ -20574,8 +20574,8 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                 ), m(
                   'div',
                   { className: 'Form-group' },
-                  m('input', { className: 'FormControl', name: 'verification_code', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
-                    onchange: m.withAttr('value', this.verification_code),
+                  m('input', { className: 'FormControl', name: 'verificationCode', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
+                    onchange: m.withAttr('value', this.verificationCode),
                     disabled: this.loading })
                 ), m(
                   'div',
@@ -20624,7 +20624,7 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                 _this2.loaded();
               }).catch(function () {}).then(this.loaded.bind(this));
             } else {
-              data.verification_code = this.verification_code();
+              data.verificationCode = this.verificationCode();
               app.request({
                 url: app.forum.attribute('baseUrl') + '/confirm/phone',
                 method: 'POST',
@@ -27651,7 +27651,7 @@ System.register('flarum/components/ResetPasswordModal', ['flarum/components/Moda
              *
              * @type {Function}
              */
-            this.verification_code = m.prop(this.props.verification_code || '');
+            this.verificationCode = m.prop(this.props.verificationCode || '');
 
             /**
              * The value of the password input.
@@ -27718,8 +27718,8 @@ System.register('flarum/components/ResetPasswordModal', ['flarum/components/Moda
                 m(
                   'div',
                   { className: 'Form-group' },
-                  m('input', { className: 'FormControl', name: 'verification_code', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
-                    onchange: m.withAttr('value', this.verification_code),
+                  m('input', { className: 'FormControl', name: 'verificationCode', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
+                    onchange: m.withAttr('value', this.verificationCode),
                     disabled: this.loading })
                 ),
                 m(
@@ -27752,7 +27752,7 @@ System.register('flarum/components/ResetPasswordModal', ['flarum/components/Moda
         }, {
           key: 'onready',
           value: function onready() {
-            this.$('[name=verification_code]').select();
+            this.$('[name=verificationCode]').select();
           }
         }, {
           key: 'onsubmit',
@@ -27769,7 +27769,7 @@ System.register('flarum/components/ResetPasswordModal', ['flarum/components/Moda
               url: app.forum.attribute('baseUrl') + '/reset',
               data: {
                 phone: this.phone(),
-                verification_code: this.verification_code(),
+                verificationCode: this.verificationCode(),
                 password: this.password(),
                 password_confirmation: this.passwordConfirmation()
               },
@@ -28606,7 +28606,7 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
              *
              * @type {Function}
              */
-            this.verification_code = m.prop(this.props.verification_code || '');
+            this.verificationCode = m.prop(this.props.verificationCode || '');
 
             /**
              * The value of the username input.
@@ -28691,38 +28691,19 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
                   disabled: this.loading })
               )] : '',
               this.step === 2 ? [m(
-                'p',
-                { className: 'helpText' },
-                extractText(app.translator.trans('core.lib.phone_verification.verification_text'))
-              ), m(
                 'div',
                 { className: 'Form-group' },
                 m(
                   'p',
-                  null,
-                  '+',
-                  this.country_code(),
-                  ' ',
-                  this.phone_number()
+                  { className: 'helpText' },
+                  app.translator.trans('core.lib.phone_verification.verification_message_sent_message', { phone: '+' + this.phone() })
                 )
               ), m(
                 'div',
                 { className: 'Form-group' },
-                m('input', { className: 'FormControl', name: 'verification_code', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
-                  onchange: m.withAttr('value', this.verification_code),
+                m('input', { className: 'FormControl', name: 'verificationCode', type: 'text', placeholder: extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder')),
+                  onchange: m.withAttr('value', this.verificationCode),
                   disabled: this.loading })
-              )] : '',
-              this.step === 3 ? [m(
-                'div',
-                { className: 'Form-group' },
-                m(
-                  'p',
-                  null,
-                  '+',
-                  this.country_code(),
-                  ' ',
-                  this.phone_number()
-                )
               ), m(
                 'div',
                 { className: 'Form-group' },
@@ -28813,12 +28794,9 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
             var path = '';
             switch (this.step) {
               case 1:
-                path = '/register/verification/start';
+                path = '/register/verification';
                 break;
               case 2:
-                path = '/register/verification/check';
-                break;
-              case 3:
                 path = '/register';
                 break;
             }
@@ -28829,26 +28807,34 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
               data: data,
               errorHandler: this.onerror.bind(this)
             }).then(function () {
-              if (_this2.step === 3) {
+              if (_this2.step === 2) {
                 window.location.reload();
               } else {
                 _this2.step++;
                 _this2.loaded();
+                _this2.$('[name=verificationCode]').select();
               }
             }, this.loaded.bind(this));
+          }
+        }, {
+          key: 'phone',
+          value: function phone() {
+            var countryCode = this.country_code();
+            var phoneNumber = this.phone_number();
+            if (countryCode && phoneNumber) {
+              return '' + countryCode + phoneNumber;
+            }
+            return '';
           }
         }, {
           key: 'submitData',
           value: function submitData() {
             var data = {
-              phone: '' + this.country_code() + this.phone_number()
+              phone: this.phone()
             };
 
             if (this.step === 2) {
-              data.verification_code = this.verification_code();
-            }
-
-            if (this.step === 3) {
+              data.verificationCode = this.verificationCode();
               data.username = this.username();
               data.password = this.password();
             }

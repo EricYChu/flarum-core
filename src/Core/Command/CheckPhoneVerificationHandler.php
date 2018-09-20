@@ -37,7 +37,7 @@ class CheckPhoneVerificationHandler
         $data = $command->data;
 
         $phone = array_get($data, 'attributes.phone');
-        $verificationCode = array_get($data, 'attributes.verification_code');
+        $verificationCode = array_get($data, 'attributes.verificationCode');
 
         $this->phoneVerification->check($actor, $phone, $verificationCode);
     }

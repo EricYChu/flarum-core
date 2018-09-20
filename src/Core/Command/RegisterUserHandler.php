@@ -113,24 +113,30 @@ class RegisterUserHandler
             $this->assertAdmin($actor);
         }
 
-        $validator = $this->validator->makeValidator((array)array_get($data, 'attributes'));
-
         $phone = array_get($data, 'attributes.phone');
-
-        $validator->after(function (Validator $validator) use ($phone) {
-            if ($validator->errors()->isEmpty()) {
-                if (!$this->phoneVerification->status($phone)) {
-                    $validator->errors()->add('phone', $this->translator->trans('core.api.phone_not_verified_message'));
-                }
-            }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
         $username = array_get($data, 'attributes.username');
         $password = array_get($data, 'attributes.password');
+        $verificationCode = array_get($data, 'attributes.verificationCode');
+
+        $validation = $this->validator->makeValidator(compact('phone', 'username', 'password'));
+        if ($validation->fails()) {
+            throw new ValidationException($validation);
+        }
+
+        $validation = $this->validatorFactory->make(compact('verificationCode'), [
+            'verificationCode' => 'required|digits:6',
+        ]);
+        $validation->after(function (Validator $validator) use ($actor, $phone, $verificationCode) {
+            if ($validator->errors()->isEmpty()) {
+                $this->phoneVerification->check($actor, $phone, $verificationCode);
+//                if (!$this->phoneVerification->status($phone)) {
+//                    $validator->errors()->add('phone', $this->translator->trans('core.api.phone_not_verified_message'));
+//                }
+            }
+        });
+        if ($validation->fails()) {
+            throw new ValidationException($validation);
+        }
 
         $user = User::register($username, $phone, $password);
 

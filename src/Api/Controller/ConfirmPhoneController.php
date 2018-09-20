@@ -58,7 +58,7 @@ class ConfirmPhoneController extends AbstractResourceController
 
         $body = $request->getParsedBody();
         $phone = array_get($body, 'data.attributes.phone', '');
-        $verificationCode = array_get($body, 'data.attributes.verification_code', '');
+        $verificationCode = array_get($body, 'data.attributes.verificationCode', '');
 
         return $this->bus->dispatch(
             new ConfirmPhone($actor, $phone, $verificationCode)

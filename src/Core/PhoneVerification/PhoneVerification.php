@@ -111,7 +111,7 @@ class PhoneVerification
      */
     public function check(User $actor, $phone, $verificationCode)
     {
-        $data = ['phone' => $phone, 'verification_code' => $verificationCode];
+        $data = ['phone' => $phone, 'verificationCode' => $verificationCode];
 
         $validator = $this->validator->makeValidator($data);
 
@@ -123,7 +123,7 @@ class PhoneVerification
                 } else {
                     $response = $this->authy->phoneVerificationCheck($phoneNumber, $countryCode, $verificationCode);
                     if (!$response->ok()) {
-                        $validator->errors()->add('verification_code', $this->translator->trans('core.api.invalid_verification_code_message'));
+                        $validator->errors()->add('verificationCode', $this->translator->trans('core.api.invalid_verification_code_message'));
                     }
                 }
             }

@@ -101,16 +101,16 @@ class ForumServiceProvider extends AbstractServiceProvider
         );
 
         $routes->post(
-            '/register/verification/start',
+            '/register/verification',
             'startRegisterVerification',
             $route->toController(Controller\StartRegisterVerificationController::class)
         );
 
-        $routes->post(
-            '/register/verification/check',
-            'checkRegisterVerification',
-            $route->toController(Controller\CheckRegisterVerificationController::class)
-        );
+//        $routes->post(
+//            '/register/verification/check',
+//            'checkRegisterVerification',
+//            $route->toController(Controller\CheckRegisterVerificationController::class)
+//        );
 
         $routes->post(
             '/register',

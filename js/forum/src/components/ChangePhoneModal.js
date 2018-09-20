@@ -39,7 +39,7 @@ export default class ChangePhoneModal extends Modal {
      *
      * @type {Function}
      */
-    this.verification_code = m.prop(this.props.verification_code || '');
+    this.verificationCode = m.prop(this.props.verificationCode || '');
 
     /**
      * The value of the password input.
@@ -123,8 +123,8 @@ export default class ChangePhoneModal extends Modal {
               <p>+{this.country_code()} {this.phone_number()}</p>
             </div>,
             <div className="Form-group">
-              <input className="FormControl" name="verification_code" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
-                     onchange={m.withAttr('value', this.verification_code)}
+              <input className="FormControl" name="verificationCode" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
+                     onchange={m.withAttr('value', this.verificationCode)}
                      disabled={this.loading} />
             </div>,
             <div className="Form-group">
@@ -174,7 +174,7 @@ export default class ChangePhoneModal extends Modal {
         .catch(() => {})
         .then(this.loaded.bind(this));
     } else {
-      data.verification_code = this.verification_code();
+      data.verificationCode = this.verificationCode();
       app.request({
           url: app.forum.attribute('baseUrl') + '/confirm/phone',
           method: 'POST',

@@ -23,7 +23,7 @@ class PhoneVerificationValidator extends AbstractValidator
                 'required',
                 'digits_between:8,16',
             ],
-            'verification_code' => [
+            'verificationCode' => [
                 'required',
                 'digits:6',
             ],

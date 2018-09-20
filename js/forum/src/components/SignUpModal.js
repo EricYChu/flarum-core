@@ -39,7 +39,7 @@ export default class SignUpModal extends Modal {
      *
      * @type {Function}
      */
-    this.verification_code = m.prop(this.props.verification_code || '');
+    this.verificationCode = m.prop(this.props.verificationCode || '');
 
     /**
      * The value of the username input.
@@ -108,20 +108,13 @@ export default class SignUpModal extends Modal {
         ] : ''}
 
         {this.step === 2 ? [
-          <p className="helpText">{extractText(app.translator.trans('core.lib.phone_verification.verification_text'))}</p>,
           <div className="Form-group">
-            <p>+{this.country_code()} {this.phone_number()}</p>
+            <p className="helpText">{app.translator.trans('core.lib.phone_verification.verification_message_sent_message', {phone: '+'+this.phone()})}</p>
           </div>,
           <div className="Form-group">
-            <input className="FormControl" name="verification_code" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
-                   onchange={m.withAttr('value', this.verification_code)}
+            <input className="FormControl" name="verificationCode" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
+                   onchange={m.withAttr('value', this.verificationCode)}
                    disabled={this.loading} />
-          </div>
-        ] : ''}
-
-        {this.step === 3 ? [
-          <div className="Form-group">
-            <p>+{this.country_code()} {this.phone_number()}</p>
           </div>,
           <div className="Form-group">
             <input className="FormControl" name="username" type="text" placeholder={extractText(app.translator.trans('core.forum.sign_up.username_placeholder'))}
@@ -206,12 +199,9 @@ export default class SignUpModal extends Modal {
     let path = '';
     switch (this.step) {
       case 1:
-        path = '/register/verification/start';
+        path = '/register/verification';
         break;
       case 2:
-        path = '/register/verification/check';
-        break;
-      case 3:
         path = '/register';
         break;
     }
@@ -223,15 +213,25 @@ export default class SignUpModal extends Modal {
       errorHandler: this.onerror.bind(this)
     }).then(
       () => {
-        if (this.step === 3) {
+        if (this.step === 2) {
           window.location.reload();
         } else {
           this.step++;
           this.loaded();
+          this.$('[name=verificationCode]').select();
         }
       },
       this.loaded.bind(this)
     );
+  }
+
+  phone() {
+    const countryCode = this.country_code();
+    const phoneNumber = this.phone_number();
+    if (countryCode && phoneNumber) {
+      return `${countryCode}${phoneNumber}`;
+    }
+    return '';
   }
 
   /**
@@ -242,14 +242,11 @@ export default class SignUpModal extends Modal {
    */
   submitData() {
     const data = {
-      phone: `${this.country_code()}${this.phone_number()}`
+      phone: this.phone()
     };
 
     if (this.step === 2) {
-      data.verification_code = this.verification_code();
-    }
-
-    if (this.step === 3) {
+      data.verificationCode = this.verificationCode();
       data.username = this.username();
       data.password = this.password();
     }

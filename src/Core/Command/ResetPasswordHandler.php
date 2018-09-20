@@ -111,7 +111,7 @@ class ResetPasswordHandler
             'phone' => $phone,
             'password' => $password,
             'password_confirmation' => $passwordConfirmation,
-            'verification_code' => $verificationCode,
+            'verificationCode' => $verificationCode,
         ]);
 
         $validator->after(function (Validator $validator) use ($actor, $phone, $verificationCode) {

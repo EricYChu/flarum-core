@@ -34,7 +34,7 @@ export default class ResetPasswordModal extends Modal {
      *
      * @type {Function}
      */
-    this.verification_code = m.prop(this.props.verification_code || '');
+    this.verificationCode = m.prop(this.props.verificationCode || '');
 
     /**
      * The value of the password input.
@@ -84,8 +84,8 @@ export default class ResetPasswordModal extends Modal {
 
         <div className="Form Form--centered">
           <div className="Form-group">
-            <input className="FormControl" name="verification_code" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
-                   onchange={m.withAttr('value', this.verification_code)}
+            <input className="FormControl" name="verificationCode" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
+                   onchange={m.withAttr('value', this.verificationCode)}
                    disabled={this.loading} />
           </div>
 
@@ -115,7 +115,7 @@ export default class ResetPasswordModal extends Modal {
   }
 
   onready() {
-    this.$('[name=verification_code]').select();
+    this.$('[name=verificationCode]').select();
   }
 
   onsubmit(e) {
@@ -129,7 +129,7 @@ export default class ResetPasswordModal extends Modal {
         url: app.forum.attribute('baseUrl') + '/reset',
         data: {
           phone: this.phone(),
-          verification_code: this.verification_code(),
+          verificationCode: this.verificationCode(),
           password: this.password(),
           password_confirmation: this.passwordConfirmation(),
         },

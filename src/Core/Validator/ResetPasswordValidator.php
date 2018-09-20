@@ -23,7 +23,7 @@ class ResetPasswordValidator extends AbstractValidator
                 'required',
                 'numeric',
             ],
-            'verification_code' => [
+            'verificationCode' => [
                 'required',
                 'digits:6',
             ],
