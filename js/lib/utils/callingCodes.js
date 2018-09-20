@@ -1,3 +1,5 @@
+import extractText from 'flarum/utils/extractText';
+
 const codes = {
   af: [93],
   al: [355],
@@ -268,12 +270,16 @@ export default class CallingCodes {
       countries.forEach(country => {
         codes[country].forEach(code => {
           items.push({
-            name: app.translator.trans('core.lib.countries.' + country),
+            name: extractText(app.translator.trans('core.lib.countries.' + country)),
             code: code
           })
         })
       });
-      items.sort(function(a, b){
+      items.sort(function(a, b) {
+        if (a.localeCompare) {
+          return a.name.localeCompare(b.name, app.data.locale, {sensitivity: 'base'});
+        }
+
         if (a.name < b.name) {
           return -1;
         } else if (a.name > b.name) {

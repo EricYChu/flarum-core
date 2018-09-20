@@ -31900,12 +31900,14 @@ System.register("flarum/utils/anchorScroll", [], function (_export, _context) {
 });;
 'use strict';
 
-System.register('flarum/utils/callingCodes', [], function (_export, _context) {
+System.register('flarum/utils/callingCodes', ['flarum/utils/extractText'], function (_export, _context) {
   "use strict";
 
-  var codes, countries, items, CallingCodes;
+  var extractText, codes, countries, items, CallingCodes;
   return {
-    setters: [],
+    setters: [function (_flarumUtilsExtractText) {
+      extractText = _flarumUtilsExtractText.default;
+    }],
     execute: function () {
       codes = {
         af: [93],
@@ -32189,12 +32191,16 @@ System.register('flarum/utils/callingCodes', [], function (_export, _context) {
               countries.forEach(function (country) {
                 codes[country].forEach(function (code) {
                   items.push({
-                    name: app.translator.trans('core.lib.countries.' + country),
+                    name: extractText(app.translator.trans('core.lib.countries.' + country)),
                     code: code
                   });
                 });
               });
               items.sort(function (a, b) {
+                if (a.localeCompare) {
+                  return a.name.localeCompare(b.name, app.data.locale, { sensitivity: 'base' });
+                }
+
                 if (a.name < b.name) {
                   return -1;
                 } else if (a.name > b.name) {
