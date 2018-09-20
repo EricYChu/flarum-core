@@ -20326,7 +20326,7 @@ System.register('flarum/components/ChangePasswordModal', ['flarum/components/Mod
                 m(
                   'div',
                   { className: 'Form-group' },
-                  m('input', { className: 'FormControl', name: 'old_password', type: 'password', placeholder: extractText(app.translator.trans('core.forum.change_password.old_password_placeholder')),
+                  m('input', { className: 'FormControl', name: 'oldPassword', type: 'password', placeholder: extractText(app.translator.trans('core.forum.change_password.old_password_placeholder')),
                     bidi: this.oldPassword,
                     required: true,
                     disabled: this.loading })
@@ -20427,14 +20427,14 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
              *
              * @type {Function}
              */
-            this.country_code = m.prop(this.props.country_code || countryCode);
+            this.countryCode = m.prop(this.props.countryCode || countryCode);
 
             /**
              * The value of the phone number input.
              *
              * @type {Function}
              */
-            this.phone_number = m.prop(this.props.phone_number || phoneNumber);
+            this.phoneNumber = m.prop(this.props.phoneNumber || phoneNumber);
 
             /**
              * The value of the verification code input.
@@ -20449,8 +20449,6 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
              * @type {function}
              */
             this.password = m.prop('');
-
-            this.step = 1;
           }
         }, {
           key: 'className',
@@ -20479,7 +20477,7 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                         'strong',
                         null,
                         '+',
-                        this.country_code()
+                        this.countryCode()
                       ), phone_number: m(
                         'strong',
                         null,
@@ -20527,8 +20525,8 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                   { className: 'Form-group' },
                   m(
                     'select',
-                    { className: 'FormControl', name: 'country_code', value: this.country_code(),
-                      onchange: m.withAttr('value', this.country_code),
+                    { className: 'FormControl', name: 'countryCode', value: this.countryCode(),
+                      onchange: m.withAttr('value', this.countryCode),
                       required: true,
                       disabled: this.loading },
                     items
@@ -20536,9 +20534,9 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                 ), m(
                   'div',
                   { className: 'Form-group' },
-                  m('input', { className: 'FormControl', name: 'phone_number', type: 'tel', placeholder: extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder')),
-                    value: this.phone_number(),
-                    onchange: m.withAttr('value', this.phone_number),
+                  m('input', { className: 'FormControl', name: 'phoneNumber', type: 'tel', placeholder: extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder')),
+                    value: this.phoneNumber(),
+                    onchange: m.withAttr('value', this.phoneNumber),
                     required: true,
                     disabled: this.loading })
                 ), m(
@@ -20567,9 +20565,9 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                     'p',
                     null,
                     '+',
-                    this.country_code(),
+                    this.countryCode(),
                     ' ',
-                    this.phone_number()
+                    this.phoneNumber()
                   )
                 ), m(
                   'div',
@@ -20640,7 +20638,7 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
         }, {
           key: 'phone',
           value: function phone() {
-            return '' + this.country_code() + this.phone_number();
+            return '' + this.countryCode() + this.phoneNumber();
           }
         }, {
           key: 'onerror',
@@ -24377,8 +24375,8 @@ System.register('flarum/components/LogInModal', ['flarum/components/Modal', 'fla
                   countryCode = _callingCodes$parsePh.countryCode,
                   phoneNumber = _callingCodes$parsePh.phoneNumber;
 
-              props.country_code = countryCode;
-              props.phone_number = phoneNumber;
+              props.countryCode = countryCode;
+              props.phoneNumber = phoneNumber;
             } else if (identification.indexOf('@') === -1) {
               props.username = identification;
             }
@@ -24454,6 +24452,8 @@ System.register('flarum/components/Modal', ['flarum/Component', 'flarum/componen
              * @type {Alert}
              */
             this.alert = null;
+
+            this.step = 1;
           }
         }, {
           key: 'view',
@@ -24468,6 +24468,15 @@ System.register('flarum/components/Modal', ['flarum/Component', 'flarum/componen
               m(
                 'div',
                 { className: 'Modal-content' },
+                this.isBackable() && this.step > 1 ? m(
+                  'div',
+                  { className: 'Modal-back App-backControl' },
+                  Button.component({
+                    icon: 'chevron-left',
+                    onclick: this.back.bind(this),
+                    className: 'Button Button--icon Button--link'
+                  })
+                ) : '',
                 this.isDismissible() ? m(
                   'div',
                   { className: 'Modal-close App-backControl' },
@@ -24505,6 +24514,11 @@ System.register('flarum/components/Modal', ['flarum/Component', 'flarum/componen
             return true;
           }
         }, {
+          key: 'isBackable',
+          value: function isBackable() {
+            return false;
+          }
+        }, {
           key: 'className',
           value: function className() {}
         }, {
@@ -24528,6 +24542,12 @@ System.register('flarum/components/Modal', ['flarum/Component', 'flarum/componen
           key: 'hide',
           value: function hide() {
             app.modal.close();
+          }
+        }, {
+          key: 'back',
+          value: function back() {
+            this.step--;
+            m.redraw();
           }
         }, {
           key: 'loaded',
@@ -27670,7 +27690,7 @@ System.register('flarum/components/ResetPasswordModal', ['flarum/components/Moda
         }, {
           key: 'className',
           value: function className() {
-            return 'LogInModal Modal--small';
+            return 'ResetPasswordModal Modal--small';
           }
         }, {
           key: 'title',
@@ -28592,14 +28612,14 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
              *
              * @type {Function}
              */
-            this.country_code = m.prop(this.props.country_code || callingCodes.items[0].code);
+            this.countryCode = m.prop(this.props.countryCode || callingCodes.items[0].code);
 
             /**
              * The value of the phone number input.
              *
              * @type {Function}
              */
-            this.phone_number = m.prop(this.props.phone_number || '');
+            this.phoneNumber = m.prop(this.props.phoneNumber || '');
 
             /**
              * The value of the verification code input.
@@ -28621,8 +28641,6 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
              * @type {Function}
              */
             this.password = m.prop(this.props.password || '');
-
-            this.step = 1;
           }
         }, {
           key: 'className',
@@ -28677,17 +28695,17 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
                 { className: 'Form-group' },
                 m(
                   'select',
-                  { className: 'FormControl', name: 'country_code', value: this.country_code(),
-                    onchange: m.withAttr('value', this.country_code),
+                  { className: 'FormControl', name: 'countryCode', value: this.countryCode(),
+                    onchange: m.withAttr('value', this.countryCode),
                     disabled: this.loading },
                   items
                 )
               ), m(
                 'div',
                 { className: 'Form-group' },
-                m('input', { className: 'FormControl', name: 'phone_number', type: 'tel', placeholder: extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder')),
-                  value: this.phone_number(),
-                  onchange: m.withAttr('value', this.phone_number),
+                m('input', { className: 'FormControl', name: 'phoneNumber', type: 'tel', placeholder: extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder')),
+                  value: this.phoneNumber(),
+                  onchange: m.withAttr('value', this.phoneNumber),
                   disabled: this.loading })
               )] : '',
               this.step === 2 ? [m(
@@ -28722,35 +28740,21 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
               m(
                 'div',
                 { className: 'Form-group' },
-                this.step > 1 ? m(
-                  Button,
-                  {
-                    className: 'Button Button--text',
-                    onclick: this.back.bind(this),
-                    disabled: this.loading,
-                    type: 'button', style: 'float: left;' },
-                  'Back'
-                ) : '',
                 m(
                   Button,
                   {
-                    className: 'Button Button--primary',
-                    type: 'submit', style: 'float: right;',
+                    className: 'Button Button--primary Button--block',
+                    type: 'submit',
                     loading: this.loading },
-                  app.translator.trans(this.step === 3 ? 'core.forum.sign_up.submit_button' : 'core.forum.sign_up.next_button')
+                  app.translator.trans(this.step === 2 ? 'core.forum.sign_up.submit_button' : 'core.forum.sign_up.next_button')
                 )
               )
             )];
           }
         }, {
-          key: 'back',
-          value: function back() {
-            if (this.step === 3) {
-              this.step = 1;
-            } else {
-              this.step--;
-            }
-            m.redraw();
+          key: 'isBackable',
+          value: function isBackable() {
+            return true;
           }
         }, {
           key: 'footer',
@@ -28765,7 +28769,7 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
           key: 'logIn',
           value: function logIn() {
             var props = {
-              identification: this.phone_number() ? '+' + this.country_code() + this.phone_number() : ''
+              identification: this.phoneNumber() ? '+' + this.countryCode() + this.phoneNumber() : ''
             };
 
             app.modal.show(new LogInModal(props));
@@ -28773,8 +28777,8 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
         }, {
           key: 'onready',
           value: function onready() {
-            if (this.props.username && !this.props.phone_number) {
-              this.$('[name=phone_number]').select();
+            if (this.props.username && !this.props.phoneNumber) {
+              this.$('[name=phoneNumber]').select();
             } else {
               this.$('[name=username]').select();
             }
@@ -28819,8 +28823,8 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
         }, {
           key: 'phone',
           value: function phone() {
-            var countryCode = this.country_code();
-            var phoneNumber = this.phone_number();
+            var countryCode = this.countryCode();
+            var phoneNumber = this.phoneNumber();
             if (countryCode && phoneNumber) {
               return '' + countryCode + phoneNumber;
             }

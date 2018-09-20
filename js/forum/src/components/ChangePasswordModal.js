@@ -75,7 +75,7 @@ export default class ChangePasswordModal extends Modal {
           </div>
 
           <div className="Form-group">
-            <input className="FormControl" name="old_password" type="password" placeholder={extractText(app.translator.trans('core.forum.change_password.old_password_placeholder'))}
+            <input className="FormControl" name="oldPassword" type="password" placeholder={extractText(app.translator.trans('core.forum.change_password.old_password_placeholder'))}
                    bidi={this.oldPassword}
                    required={true}
                    disabled={this.loading} />

@@ -11,8 +11,8 @@ import callingCodes from 'flarum/utils/callingCodes';
  * ### Props
  *
  * - `username`
- * - `country_code`
- * - `phone_number`
+ * - `countryCode`
+ * - `phoneNumber`
  * - `password`
  * - `token` An phone token to sign up with.
  */
@@ -25,14 +25,14 @@ export default class SignUpModal extends Modal {
      *
      * @type {Function}
      */
-    this.country_code = m.prop(this.props.country_code || callingCodes.items[0].code);
+    this.countryCode = m.prop(this.props.countryCode || callingCodes.items[0].code);
 
     /**
      * The value of the phone number input.
      *
      * @type {Function}
      */
-    this.phone_number = m.prop(this.props.phone_number || '');
+    this.phoneNumber = m.prop(this.props.phoneNumber || '');
 
     /**
      * The value of the verification code input.
@@ -54,9 +54,6 @@ export default class SignUpModal extends Modal {
      * @type {Function}
      */
     this.password = m.prop(this.props.password || '');
-
-
-    this.step = 1
   }
 
   className() {
@@ -93,16 +90,16 @@ export default class SignUpModal extends Modal {
         {this.step === 1 ? [
           <p className="helpText">{extractText(app.translator.trans('core.lib.phone_verification.verification_text'))}</p>,
           <div className="Form-group">
-            <select className="FormControl" name="country_code" value={this.country_code()}
-                    onchange={m.withAttr('value', this.country_code)}
+            <select className="FormControl" name="countryCode" value={this.countryCode()}
+                    onchange={m.withAttr('value', this.countryCode)}
                     disabled={this.loading}>
               {(items)}
             </select>
           </div>,
           <div className="Form-group">
-            <input className="FormControl" name="phone_number" type="tel" placeholder={extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder'))}
-                   value={this.phone_number()}
-                   onchange={m.withAttr('value', this.phone_number)}
+            <input className="FormControl" name="phoneNumber" type="tel" placeholder={extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder'))}
+                   value={this.phoneNumber()}
+                   onchange={m.withAttr('value', this.phoneNumber)}
                    disabled={this.loading} />
           </div>
         ] : ''}
@@ -131,31 +128,19 @@ export default class SignUpModal extends Modal {
         ] : ''}
 
         <div className="Form-group">
-          {this.step > 1 ? <Button
-            className="Button Button--text"
-            onclick={this.back.bind(this)}
-            disabled={this.loading}
-            type="button" style="float: left;">
-            Back
-          </Button> : ''}
           <Button
-            className="Button Button--primary"
-            type="submit" style="float: right;"
+            className="Button Button--primary Button--block"
+            type="submit"
             loading={this.loading}>
-            {app.translator.trans(this.step === 3 ? 'core.forum.sign_up.submit_button' : 'core.forum.sign_up.next_button')}
+            {app.translator.trans(this.step === 2 ? 'core.forum.sign_up.submit_button' : 'core.forum.sign_up.next_button')}
           </Button>
         </div>
       </div>
     ];
   }
 
-  back() {
-    if (this.step === 3) {
-      this.step = 1;
-    } else {
-      this.step--;
-    }
-    m.redraw();
+  isBackable() {
+    return true;
   }
 
   footer() {
@@ -167,22 +152,22 @@ export default class SignUpModal extends Modal {
   }
 
   /**
-   * Open the log in modal, prefilling it with an phone_number if
+   * Open the log in modal, prefilling it with an phone number if
    * the user has entered one.
    *
    * @public
    */
   logIn() {
     const props = {
-      identification: (this.phone_number() ? '+' + this.country_code() + this.phone_number() : '')
+      identification: (this.phoneNumber() ? '+' + this.countryCode() + this.phoneNumber() : '')
     };
 
     app.modal.show(new LogInModal(props));
   }
 
   onready() {
-    if (this.props.username && !this.props.phone_number) {
-      this.$('[name=phone_number]').select();
+    if (this.props.username && !this.props.phoneNumber) {
+      this.$('[name=phoneNumber]').select();
     } else {
       this.$('[name=username]').select();
     }
@@ -226,8 +211,8 @@ export default class SignUpModal extends Modal {
   }
 
   phone() {
-    const countryCode = this.country_code();
-    const phoneNumber = this.phone_number();
+    const countryCode = this.countryCode();
+    const phoneNumber = this.phoneNumber();
     if (countryCode && phoneNumber) {
       return `${countryCode}${phoneNumber}`;
     }

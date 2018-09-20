@@ -125,8 +125,8 @@ export default class LogInModal extends Modal {
 
     if (/^(\+?)\d+$/.test(identification)) {
       let { countryCode, phoneNumber } = callingCodes.parsePhone(identification);
-      props.country_code = countryCode;
-      props.phone_number = phoneNumber;
+      props.countryCode = countryCode;
+      props.phoneNumber = phoneNumber;
     } else if (identification.indexOf('@') === -1) {
       props.username = identification;
     }

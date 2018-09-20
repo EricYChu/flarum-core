@@ -16,6 +16,8 @@ export default class Modal extends Component {
      * @type {Alert}
      */
     this.alert = null;
+
+    this.step = 1;
   }
 
   view() {
@@ -26,6 +28,16 @@ export default class Modal extends Component {
     return (
       <div className={'Modal modal-dialog ' + this.className()}>
         <div className="Modal-content">
+          {this.isBackable() && this.step > 1 ? (
+            <div className="Modal-back App-backControl">
+              {Button.component({
+                icon: 'chevron-left',
+                onclick: this.back.bind(this),
+                className: 'Button Button--icon Button--link'
+              })}
+            </div>
+          ) : ''}
+
           {this.isDismissible() ? (
             <div className="Modal-close App-backControl">
               {Button.component({
@@ -57,6 +69,15 @@ export default class Modal extends Component {
    */
   isDismissible() {
     return true;
+  }
+
+  /**
+   * Determine whether or not the modal should be backable via an '<' button.
+   *
+   * @return {Boolean}
+   */
+  isBackable() {
+    return false;
   }
 
   /**
@@ -109,6 +130,14 @@ export default class Modal extends Component {
    */
   hide() {
     app.modal.close();
+  }
+
+  /**
+   * Back to prev step.
+   */
+  back() {
+    this.step--;
+    m.redraw();
   }
 
   /**

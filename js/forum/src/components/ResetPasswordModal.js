@@ -52,7 +52,7 @@ export default class ResetPasswordModal extends Modal {
   }
 
   className() {
-    return 'LogInModal Modal--small';
+    return 'ResetPasswordModal Modal--small';
   }
 
   title() {

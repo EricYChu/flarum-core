@@ -159,6 +159,13 @@
     -webkit-transform: none !important;
             transform: none !important;
   }
+  .Modal-back {
+    left: 0;
+  }
+  .Modal-back + .Modal-close {
+    left: auto;
+    right: 0;
+  }
   .Modal-content {
     border-radius: 0;
     border: 0;
@@ -180,6 +187,12 @@
   .Modal-close {
     position: absolute;
     right: 10px;
+    top: 10px;
+    z-index: 1;
+  }
+  .Modal-back {
+    position: absolute;
+    left: 10px;
     top: 10px;
     z-index: 1;
   }

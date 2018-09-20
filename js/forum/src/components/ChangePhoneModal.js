@@ -25,14 +25,14 @@ export default class ChangePhoneModal extends Modal {
      *
      * @type {Function}
      */
-    this.country_code = m.prop(this.props.country_code || countryCode);
+    this.countryCode = m.prop(this.props.countryCode || countryCode);
 
     /**
      * The value of the phone number input.
      *
      * @type {Function}
      */
-    this.phone_number = m.prop(this.props.phone_number || phoneNumber);
+    this.phoneNumber = m.prop(this.props.phoneNumber || phoneNumber);
 
     /**
      * The value of the verification code input.
@@ -47,8 +47,6 @@ export default class ChangePhoneModal extends Modal {
      * @type {function}
      */
     this.password = m.prop('');
-
-    this.step = 1;
   }
 
   className() {
@@ -64,7 +62,7 @@ export default class ChangePhoneModal extends Modal {
       return (
         <div className="Modal-body">
           <div className="Form Form--centered">
-            <p className="helpText">{app.translator.trans('core.forum.change_phone.confirmation_message', {country_code: <strong>+{this.country_code()}</strong>, phone_number: <strong>{this.phone_number()}</strong>})}</p>
+            <p className="helpText">{app.translator.trans('core.forum.change_phone.confirmation_message', {country_code: <strong>+{this.countryCode()}</strong>, phone_number: <strong>{this.phone_number()}</strong>})}</p>
             <div className="Form-group">
               <Button className="Button Button--primary Button--block" onclick={this.hide.bind(this)}>
                 {app.translator.trans('core.forum.change_phone.dismiss_button')}
@@ -87,17 +85,17 @@ export default class ChangePhoneModal extends Modal {
           {this.step === 1 ? [
             <p className="helpText">{extractText(app.translator.trans('core.lib.phone_verification.verification_text'))}</p>,
             <div className="Form-group">
-              <select className="FormControl" name="country_code" value={this.country_code()}
-                      onchange={m.withAttr('value', this.country_code)}
+              <select className="FormControl" name="countryCode" value={this.countryCode()}
+                      onchange={m.withAttr('value', this.countryCode)}
                       required={true}
                       disabled={this.loading}>
                 {(items)}
               </select>
             </div>,
             <div className="Form-group">
-              <input className="FormControl" name="phone_number" type="tel" placeholder={extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder'))}
-                     value={this.phone_number()}
-                     onchange={m.withAttr('value', this.phone_number)}
+              <input className="FormControl" name="phoneNumber" type="tel" placeholder={extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder'))}
+                     value={this.phoneNumber()}
+                     onchange={m.withAttr('value', this.phoneNumber)}
                      required={true}
                      disabled={this.loading} />
             </div>,
@@ -120,7 +118,7 @@ export default class ChangePhoneModal extends Modal {
 
           {this.step === 2 ? [
             <div className="Form-group">
-              <p>+{this.country_code()} {this.phone_number()}</p>
+              <p>+{this.countryCode()} {this.phoneNumber()}</p>
             </div>,
             <div className="Form-group">
               <input className="FormControl" name="verificationCode" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
@@ -193,7 +191,7 @@ export default class ChangePhoneModal extends Modal {
   }
 
   phone() {
-    return `${this.country_code()}${this.phone_number()}`;
+    return `${this.countryCode()}${this.phoneNumber()}`;
   }
 
   onerror(error) {
