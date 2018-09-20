@@ -32197,7 +32197,7 @@ System.register('flarum/utils/callingCodes', ['flarum/utils/extractText'], funct
                 });
               });
               items.sort(function (a, b) {
-                if (a.localeCompare) {
+                if (typeof a.name.localeCompare !== 'undefinedundefined') {
                   return a.name.localeCompare(b.name, app.data.locale, { sensitivity: 'base' });
                 }
 
