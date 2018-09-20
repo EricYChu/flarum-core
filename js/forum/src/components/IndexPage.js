@@ -4,7 +4,6 @@ import ItemList from 'flarum/utils/ItemList';
 import listItems from 'flarum/helpers/listItems';
 import icon from 'flarum/helpers/icon';
 import DiscussionList from 'flarum/components/DiscussionList';
-import WelcomeHero from 'flarum/components/WelcomeHero';
 import DiscussionComposer from 'flarum/components/DiscussionComposer';
 import LogInModal from 'flarum/components/LogInModal';
 import DiscussionPage from 'flarum/components/DiscussionPage';
@@ -14,8 +13,8 @@ import LinkButton from 'flarum/components/LinkButton';
 import SelectDropdown from 'flarum/components/SelectDropdown';
 
 /**
- * The `IndexPage` component displays the index page, including the welcome
- * hero, the sidebar, and the discussion list.
+ * The `IndexPage` component displays the index page, including the sidebar,
+ * and the discussion list.
  */
 export default class IndexPage extends Page {
   init() {
@@ -69,7 +68,6 @@ export default class IndexPage extends Page {
   view() {
     return (
       <div className="IndexPage">
-        {this.hero()}
         <div className="container">
           <nav className="IndexPage-nav sideNav">
             <ul>{listItems(this.sidebarItems().toArray())}</ul>
@@ -91,24 +89,15 @@ export default class IndexPage extends Page {
 
     if (isInitialized) return;
 
-    extend(context, 'onunload', () => $('#app').css('min-height', ''));
-
     app.setTitle('');
     app.setTitleCount(0);
 
-    // Work out the difference between the height of this hero and that of the
-    // previous hero. Maintain the same scroll position relative to the bottom
-    // of the hero so that the sidebar doesn't jump around.
-    const oldHeroHeight = app.cache.heroHeight;
-    const heroHeight = app.cache.heroHeight = this.$('.Hero').outerHeight();
     const scrollTop = app.cache.scrollTop;
-
-    $('#app').css('min-height', $(window).height() + heroHeight);
 
     // Scroll to the remembered position. We do this after a short delay so that
     // it happens after the browser has done its own "back button" scrolling,
     // which isn't right. https://github.com/flarum/core/issues/835
-    const scroll = () => $(window).scrollTop(scrollTop - oldHeroHeight + heroHeight);
+    const scroll = () => $(window).scrollTop(scrollTop);
     scroll();
     setTimeout(scroll, 1);
 
@@ -129,15 +118,6 @@ export default class IndexPage extends Page {
         }
       }
     }
-  }
-
-  /**
-   * Get the component to display as the hero.
-   *
-   * @return {MithrilComponent}
-   */
-  hero() {
-    return WelcomeHero.component();
   }
 
   /**

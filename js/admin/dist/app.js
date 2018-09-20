@@ -18062,7 +18062,7 @@ System.register('flarum/components/BasicsPage', ['flarum/components/Page', 'flar
 
             this.loading = false;
 
-            this.fields = ['forum_title', 'forum_description', 'default_locale', 'show_language_selector', 'default_route', 'welcome_title', 'welcome_message'];
+            this.fields = ['forum_title', 'forum_description', 'default_locale', 'show_language_selector', 'default_route'];
             this.values = {};
 
             var settings = app.data.settings;
@@ -18133,20 +18133,6 @@ System.register('flarum/components/BasicsPage', ['flarum/components/Page', 'flar
                         label
                       );
                     })]
-                  }),
-                  FieldSet.component({
-                    label: app.translator.trans('core.admin.basics.welcome_banner_heading'),
-                    className: 'BasicsPage-welcomeBanner',
-                    children: [m(
-                      'div',
-                      { className: 'helpText' },
-                      app.translator.trans('core.admin.basics.welcome_banner_text')
-                    ), m(
-                      'div',
-                      { className: 'BasicsPage-welcomeBanner-input' },
-                      m('input', { className: 'FormControl', value: this.values.welcome_title(), oninput: m.withAttr('value', this.values.welcome_title) }),
-                      m('textarea', { className: 'FormControl', value: this.values.welcome_message(), oninput: m.withAttr('value', this.values.welcome_message) })
-                    )]
                   }),
                   Button.component({
                     type: 'submit',
@@ -19585,6 +19571,8 @@ System.register('flarum/components/Modal', ['flarum/Component', 'flarum/componen
              * @type {Alert}
              */
             this.alert = null;
+
+            this.step = 1;
           }
         }, {
           key: 'view',
@@ -19599,6 +19587,15 @@ System.register('flarum/components/Modal', ['flarum/Component', 'flarum/componen
               m(
                 'div',
                 { className: 'Modal-content' },
+                this.isBackable() && this.step > 1 ? m(
+                  'div',
+                  { className: 'Modal-back App-backControl' },
+                  Button.component({
+                    icon: 'chevron-left',
+                    onclick: this.back.bind(this),
+                    className: 'Button Button--icon Button--link'
+                  })
+                ) : '',
                 this.isDismissible() ? m(
                   'div',
                   { className: 'Modal-close App-backControl' },
@@ -19636,6 +19633,11 @@ System.register('flarum/components/Modal', ['flarum/Component', 'flarum/componen
             return true;
           }
         }, {
+          key: 'isBackable',
+          value: function isBackable() {
+            return false;
+          }
+        }, {
           key: 'className',
           value: function className() {}
         }, {
@@ -19659,6 +19661,12 @@ System.register('flarum/components/Modal', ['flarum/Component', 'flarum/componen
           key: 'hide',
           value: function hide() {
             app.modal.close();
+          }
+        }, {
+          key: 'back',
+          value: function back() {
+            this.step--;
+            m.redraw();
           }
         }, {
           key: 'loaded',
@@ -22604,6 +22612,7 @@ System.register('flarum/models/User', ['flarum/Model', 'flarum/utils/stringToCol
       babelHelpers.extends(User.prototype, {
         username: Model.attribute('username'),
         email: Model.attribute('email'),
+        phone: Model.attribute('phone'),
         isActivated: Model.attribute('isActivated'),
         password: Model.attribute('password'),
 
@@ -22714,7 +22723,7 @@ System.register('flarum/Session', [], function (_export, _context) {
         /**
          * Attempt to log in a user.
          *
-         * @param {String} identification The username/email.
+         * @param {String} identification The username/phone/email.
          * @param {String} password
          * @param {Object} [options]
          * @return {Promise}
@@ -23240,687 +23249,323 @@ System.register("flarum/utils/anchorScroll", [], function (_export, _context) {
 });;
 'use strict';
 
-System.register('flarum/utils/callingCodes', [], function (_export, _context) {
+System.register('flarum/utils/callingCodes', ['flarum/utils/extractText'], function (_export, _context) {
   "use strict";
 
-  var items;
+  var extractText, codes, countries, items, CallingCodes;
   return {
-    setters: [],
+    setters: [function (_flarumUtilsExtractText) {
+      extractText = _flarumUtilsExtractText.default;
+    }],
     execute: function () {
-      items = [{
-        name: app.translator.trans('countries.af'),
-        code: 93
-      }, {
-        name: app.translator.trans('countries.al'),
-        code: 355
-      }, {
-        name: app.translator.trans('countries.dz'),
-        code: 213
-      }, {
-        name: app.translator.trans('countries.ad'),
-        code: 376
-      }, {
-        name: app.translator.trans('countries.ao'),
-        code: 244
-      }, {
-        name: app.translator.trans('countries.ai'),
-        code: 1264
-      }, {
-        name: app.translator.trans('countries.ag'),
-        code: 1268
-      }, {
-        name: app.translator.trans('countries.ar'),
-        code: 54
-      }, {
-        name: app.translator.trans('countries.am'),
-        code: 374
-      }, {
-        name: app.translator.trans('countries.aw'),
-        code: 297
-      }, {
-        name: app.translator.trans('countries.au'),
-        code: 61
-      }, {
-        name: app.translator.trans('countries.at'),
-        code: 43
-      }, {
-        name: app.translator.trans('countries.az'),
-        code: 994
-      }, {
-        name: app.translator.trans('countries.bs'),
-        code: 1242
-      }, {
-        name: app.translator.trans('countries.bh'),
-        code: 973
-      }, {
-        name: app.translator.trans('countries.bd'),
-        code: 880
-      }, {
-        name: app.translator.trans('countries.bb'),
-        code: 1246
-      }, {
-        name: app.translator.trans('countries.by'),
-        code: 375
-      }, {
-        name: app.translator.trans('countries.be'),
-        code: 32
-      }, {
-        name: app.translator.trans('countries.bz'),
-        code: 501
-      }, {
-        name: app.translator.trans('countries.bj'),
-        code: 229
-      }, {
-        name: app.translator.trans('countries.bm'),
-        code: 1441
-      }, {
-        name: app.translator.trans('countries.bt'),
-        code: 975
-      }, {
-        name: app.translator.trans('countries.bo'),
-        code: 591
-      }, {
-        name: app.translator.trans('countries.ba'),
-        code: 387
-      }, {
-        name: app.translator.trans('countries.bw'),
-        code: 267
-      }, {
-        name: app.translator.trans('countries.br'),
-        code: 55
-      }, {
-        name: app.translator.trans('countries.vg'),
-        code: 1284
-      }, {
-        name: app.translator.trans('countries.bn'),
-        code: 673
-      }, {
-        name: app.translator.trans('countries.bg'),
-        code: 359
-      }, {
-        name: app.translator.trans('countries.bf'),
-        code: 226
-      }, {
-        name: app.translator.trans('countries.bi'),
-        code: 257
-      }, {
-        name: app.translator.trans('countries.cv'),
-        code: 238
-      }, {
-        name: app.translator.trans('countries.kh'),
-        code: 855
-      }, {
-        name: app.translator.trans('countries.cm'),
-        code: 237
-      }, {
-        name: app.translator.trans('countries.ca'),
-        code: 1
-      }, {
-        name: app.translator.trans('countries.ky'),
-        code: 1345
-      }, {
-        name: app.translator.trans('countries.cf'),
-        code: 236
-      }, {
-        name: app.translator.trans('countries.td'),
-        code: 235
-      }, {
-        name: app.translator.trans('countries.cl'),
-        code: 56
-      }, {
-        name: app.translator.trans('countries.cn'),
-        code: 86
-      }, {
-        name: app.translator.trans('countries.co'),
-        code: 57
-      }, {
-        name: app.translator.trans('countries.cg'),
-        code: 242
-      }, {
-        name: app.translator.trans('countries.cd'),
-        code: 243
-      }, {
-        name: app.translator.trans('countries.km'),
-        code: 682
-      }, {
-        name: app.translator.trans('countries.ck'),
-        code: 506
-      }, {
-        name: app.translator.trans('countries.cr'),
-        code: 385
-      }, {
-        name: app.translator.trans('countries.hr'),
-        code: 53
-      }, {
-        name: app.translator.trans('countries.cu'),
-        code: 357
-      }, {
-        name: app.translator.trans('countries.cz'),
-        code: 420
-      }, {
-        name: app.translator.trans('countries.dk'),
-        code: 45
-      }, {
-        name: app.translator.trans('countries.dj'),
-        code: 253
-      }, {
-        name: app.translator.trans('countries.dm'),
-        code: 1767
-      }, {
-        name: app.translator.trans('countries.do'),
-        code: 1809
-      }, {
-        name: app.translator.trans('countries.do'),
-        code: 1829
-      }, {
-        name: app.translator.trans('countries.do'),
-        code: 1849
-      }, {
-        name: app.translator.trans('countries.ec'),
-        code: 593
-      }, {
-        name: app.translator.trans('countries.eg'),
-        code: 20
-      }, {
-        name: app.translator.trans('countries.sv'),
-        code: 503
-      }, {
-        name: app.translator.trans('countries.ee'),
-        code: 372
-      }, {
-        name: app.translator.trans('countries.et'),
-        code: 251
-      }, {
-        name: app.translator.trans('countries.fk'),
-        code: 500
-      }, {
-        name: app.translator.trans('countries.fo'),
-        code: 298
-      }, {
-        name: app.translator.trans('countries.fj'),
-        code: 679
-      }, {
-        name: app.translator.trans('countries.fi'),
-        code: 358
-      }, {
-        name: app.translator.trans('countries.fr'),
-        code: 33
-      }, {
-        name: app.translator.trans('countries.gf'),
-        code: 594
-      }, {
-        name: app.translator.trans('countries.pf'),
-        code: 689
-      }, {
-        name: app.translator.trans('countries.ga'),
-        code: 241
-      }, {
-        name: app.translator.trans('countries.gm'),
-        code: 220
-      }, {
-        name: app.translator.trans('countries.ge'),
-        code: 995
-      }, {
-        name: app.translator.trans('countries.de'),
-        code: 49
-      }, {
-        name: app.translator.trans('countries.gh'),
-        code: 233
-      }, {
-        name: app.translator.trans('countries.gi'),
-        code: 350
-      }, {
-        name: app.translator.trans('countries.gr'),
-        code: 30
-      }, {
-        name: app.translator.trans('countries.gl'),
-        code: 299
-      }, {
-        name: app.translator.trans('countries.gd'),
-        code: 1473
-      }, {
-        name: app.translator.trans('countries.gp'),
-        code: 590
-      }, {
-        name: app.translator.trans('countries.gu'),
-        code: 1671
-      }, {
-        name: app.translator.trans('countries.gt'),
-        code: 502
-      }, {
-        name: app.translator.trans('countries.gg'),
-        code: 44
-      }, {
-        name: app.translator.trans('countries.gn'),
-        code: 224
-      }, {
-        name: app.translator.trans('countries.gw'),
-        code: 245
-      }, {
-        name: app.translator.trans('countries.gy'),
-        code: 592
-      }, {
-        name: app.translator.trans('countries.ht'),
-        code: 509
-      }, {
-        name: app.translator.trans('countries.hn'),
-        code: 504
-      }, {
-        name: app.translator.trans('countries.hk'),
-        code: 852
-      }, {
-        name: app.translator.trans('countries.hu'),
-        code: 36
-      }, {
-        name: app.translator.trans('countries.is'),
-        code: 354
-      }, {
-        name: app.translator.trans('countries.in'),
-        code: 91
-      }, {
-        name: app.translator.trans('countries.id'),
-        code: 62
-      }, {
-        name: app.translator.trans('countries.int'),
-        code: 882
-      }, {
-        name: app.translator.trans('countries.ir'),
-        code: 98
-      }, {
-        name: app.translator.trans('countries.iq'),
-        code: 964
-      }, {
-        name: app.translator.trans('countries.ie'),
-        code: 353
-      }, {
-        name: app.translator.trans('countries.im'),
-        code: 44
-      }, {
-        name: app.translator.trans('countries.il'),
-        code: 972
-      }, {
-        name: app.translator.trans('countries.it'),
-        code: 39
-      }, {
-        name: app.translator.trans('countries.ci'),
-        code: 225
-      }, {
-        name: app.translator.trans('countries.jm'),
-        code: 1876
-      }, {
-        name: app.translator.trans('countries.jp'),
-        code: 81
-      }, {
-        name: app.translator.trans('countries.je'),
-        code: 44
-      }, {
-        name: app.translator.trans('countries.jo'),
-        code: 962
-      }, {
-        name: app.translator.trans('countries.kz'),
-        code: 7
-      }, {
-        name: app.translator.trans('countries.ke'),
-        code: 254
-      }, {
-        name: app.translator.trans('countries.kw'),
-        code: 965
-      }, {
-        name: app.translator.trans('countries.kg'),
-        code: 996
-      }, {
-        name: app.translator.trans('countries.la'),
-        code: 856
-      }, {
-        name: app.translator.trans('countries.lv'),
-        code: 371
-      }, {
-        name: app.translator.trans('countries.lb'),
-        code: 961
-      }, {
-        name: app.translator.trans('countries.ls'),
-        code: 266
-      }, {
-        name: app.translator.trans('countries.lr'),
-        code: 231
-      }, {
-        name: app.translator.trans('countries.ly'),
-        code: 218
-      }, {
-        name: app.translator.trans('countries.li'),
-        code: 423
-      }, {
-        name: app.translator.trans('countries.lt'),
-        code: 370
-      }, {
-        name: app.translator.trans('countries.lu'),
-        code: 352
-      }, {
-        name: app.translator.trans('countries.mo'),
-        code: 853
-      }, {
-        name: app.translator.trans('countries.mk'),
-        code: 389
-      }, {
-        name: app.translator.trans('countries.mg'),
-        code: 261
-      }, {
-        name: app.translator.trans('countries.mw'),
-        code: 265
-      }, {
-        name: app.translator.trans('countries.my'),
-        code: 60
-      }, {
-        name: app.translator.trans('countries.mv'),
-        code: 960
-      }, {
-        name: app.translator.trans('countries.ml'),
-        code: 223
-      }, {
-        name: app.translator.trans('countries.mt'),
-        code: 356
-      }, {
-        name: app.translator.trans('countries.mq'),
-        code: 596
-      }, {
-        name: app.translator.trans('countries.mr'),
-        code: 222
-      }, {
-        name: app.translator.trans('countries.mu'),
-        code: 230
-      }, {
-        name: app.translator.trans('countries.yt'),
-        code: 269
-      }, {
-        name: app.translator.trans('countries.mx'),
-        code: 52
-      }, {
-        name: app.translator.trans('countries.md'),
-        code: 373
-      }, {
-        name: app.translator.trans('countries.mc'),
-        code: 377
-      }, {
-        name: app.translator.trans('countries.mn'),
-        code: 976
-      }, {
-        name: app.translator.trans('countries.me'),
-        code: 382
-      }, {
-        name: app.translator.trans('countries.ms'),
-        code: 1664
-      }, {
-        name: app.translator.trans('countries.ma'),
-        code: 212
-      }, {
-        name: app.translator.trans('countries.mz'),
-        code: 258
-      }, {
-        name: app.translator.trans('countries.mm'),
-        code: 95
-      }, {
-        name: app.translator.trans('countries.na'),
-        code: 264
-      }, {
-        name: app.translator.trans('countries.nr'),
-        code: 674
-      }, {
-        name: app.translator.trans('countries.np'),
-        code: 977
-      }, {
-        name: app.translator.trans('countries.nl'),
-        code: 31
-      }, {
-        name: app.translator.trans('countries.an'),
-        code: 599
-      }, {
-        name: app.translator.trans('countries.nc'),
-        code: 687
-      }, {
-        name: app.translator.trans('countries.nz'),
-        code: 64
-      }, {
-        name: app.translator.trans('countries.ni'),
-        code: 505
-      }, {
-        name: app.translator.trans('countries.ne'),
-        code: 227
-      }, {
-        name: app.translator.trans('countries.ng'),
-        code: 234
-      }, {
-        name: app.translator.trans('countries.kp'),
-        code: 850
-      }, {
-        name: app.translator.trans('countries.no'),
-        code: 47
-      }, {
-        name: app.translator.trans('countries.om'),
-        code: 968
-      }, {
-        name: app.translator.trans('countries.pk'),
-        code: 92
-      }, {
-        name: app.translator.trans('countries.ps'),
-        code: 970
-      }, {
-        name: app.translator.trans('countries.pa'),
-        code: 507
-      }, {
-        name: app.translator.trans('countries.pg'),
-        code: 675
-      }, {
-        name: app.translator.trans('countries.py'),
-        code: 595
-      }, {
-        name: app.translator.trans('countries.pe'),
-        code: 51
-      }, {
-        name: app.translator.trans('countries.ph'),
-        code: 63
-      }, {
-        name: app.translator.trans('countries.pl'),
-        code: 48
-      }, {
-        name: app.translator.trans('countries.pt'),
-        code: 351
-      }, {
-        name: app.translator.trans('countries.pr'),
-        code: 1787
-      }, {
-        name: app.translator.trans('countries.qa'),
-        code: 974
-      }, {
-        name: app.translator.trans('countries.re'),
-        code: 262
-      }, {
-        name: app.translator.trans('countries.ro'),
-        code: 40
-      }, {
-        name: app.translator.trans('countries.ru'),
-        code: 7
-      }, {
-        name: app.translator.trans('countries.rw'),
-        code: 250
-      }, {
-        name: app.translator.trans('countries.kn'),
-        code: 1869
-      }, {
-        name: app.translator.trans('countries.lc'),
-        code: 1758
-      }, {
-        name: app.translator.trans('countries.ws'),
-        code: 685
-      }, {
-        name: app.translator.trans('countries.sm'),
-        code: 378
-      }, {
-        name: app.translator.trans('countries.st'),
-        code: 239
-      }, {
-        name: app.translator.trans('countries.sa'),
-        code: 966
-      }, {
-        name: app.translator.trans('countries.sn'),
-        code: 221
-      }, {
-        name: app.translator.trans('countries.rs'),
-        code: 381
-      }, {
-        name: app.translator.trans('countries.sc'),
-        code: 248
-      }, {
-        name: app.translator.trans('countries.sl'),
-        code: 232
-      }, {
-        name: app.translator.trans('countries.sg'),
-        code: 65
-      }, {
-        name: app.translator.trans('countries.sk'),
-        code: 421
-      }, {
-        name: app.translator.trans('countries.si'),
-        code: 386
-      }, {
-        name: app.translator.trans('countries.sb'),
-        code: 677
-      }, {
-        name: app.translator.trans('countries.so'),
-        code: 252
-      }, {
-        name: app.translator.trans('countries.za'),
-        code: 27
-      }, {
-        name: app.translator.trans('countries.kr'),
-        code: 82
-      }, {
-        name: app.translator.trans('countries.es'),
-        code: 34
-      }, {
-        name: app.translator.trans('countries.lk'),
-        code: 94
-      }, {
-        name: app.translator.trans('countries.vc'),
-        code: 1784
-      }, {
-        name: app.translator.trans('countries.sd'),
-        code: 249
-      }, {
-        name: app.translator.trans('countries.sr'),
-        code: 597
-      }, {
-        name: app.translator.trans('countries.sz'),
-        code: 268
-      }, {
-        name: app.translator.trans('countries.se'),
-        code: 46
-      }, {
-        name: app.translator.trans('countries.ch'),
-        code: 41
-      }, {
-        name: app.translator.trans('countries.sy'),
-        code: 963
-      }, {
-        name: app.translator.trans('countries.tw'),
-        code: 886
-      }, {
-        name: app.translator.trans('countries.tj'),
-        code: 992
-      }, {
-        name: app.translator.trans('countries.tz'),
-        code: 255
-      }, {
-        name: app.translator.trans('countries.th'),
-        code: 66
-      }, {
-        name: app.translator.trans('countries.tl'),
-        code: 670
-      }, {
-        name: app.translator.trans('countries.tg'),
-        code: 228
-      }, {
-        name: app.translator.trans('countries.to'),
-        code: 676
-      }, {
-        name: app.translator.trans('countries.tt'),
-        code: 1868
-      }, {
-        name: app.translator.trans('countries.tn'),
-        code: 216
-      }, {
-        name: app.translator.trans('countries.tr'),
-        code: 90
-      }, {
-        name: app.translator.trans('countries.tm'),
-        code: 993
-      }, {
-        name: app.translator.trans('countries.tc'),
-        code: 1649
-      }, {
-        name: app.translator.trans('countries.ug'),
-        code: 256
-      }, {
-        name: app.translator.trans('countries.ua'),
-        code: 380
-      }, {
-        name: app.translator.trans('countries.ae'),
-        code: 971
-      }, {
-        name: app.translator.trans('countries.gb'),
-        code: 44
-      }, {
-        name: app.translator.trans('countries.us'),
-        code: 1
-      }, {
-        name: app.translator.trans('countries.uy'),
-        code: 598
-      }, {
-        name: app.translator.trans('countries.uz'),
-        code: 998
-      }, {
-        name: app.translator.trans('countries.vu'),
-        code: 678
-      }, {
-        name: app.translator.trans('countries.ve'),
-        code: 58
-      }, {
-        name: app.translator.trans('countries.vn'),
-        code: 84
-      }, {
-        name: app.translator.trans('countries.ye'),
-        code: 967
-      }, {
-        name: app.translator.trans('countries.zm'),
-        code: 260
-      }, {
-        name: app.translator.trans('countries.zw'),
-        code: 263
-      }];
+      codes = {
+        af: [93],
+        al: [355],
+        dz: [213],
+        as: [1684],
+        ad: [376],
+        ao: [244],
+        ai: [1264],
+        aq: [672],
+        ag: [1268],
+        ar: [54],
+        am: [374],
+        aw: [297],
+        au: [61],
+        at: [43],
+        az: [994],
+        bs: [1242],
+        bh: [973],
+        bd: [880],
+        bb: [1246],
+        by: [375],
+        be: [32],
+        bz: [501],
+        bj: [229],
+        bm: [1441],
+        bt: [975],
+        bo: [591],
+        ba: [387],
+        bw: [267],
+        br: [55],
+        io: [246],
+        vg: [1284],
+        bn: [673],
+        bg: [359],
+        bf: [226],
+        bi: [257],
+        kh: [855],
+        cm: [237],
+        ca: [1],
+        cv: [238],
+        ky: [1345],
+        cf: [236],
+        td: [235],
+        cl: [56],
+        cn: [86],
+        cx: [61],
+        cc: [61],
+        co: [57],
+        km: [269],
+        ck: [682],
+        cr: [506],
+        hr: [385],
+        cu: [53],
+        cw: [599],
+        cy: [357],
+        cz: [420],
+        cd: [243],
+        dk: [45],
+        dj: [253],
+        dm: [1767],
+        do: [1809, 1829, 1849],
+        tl: [670],
+        ec: [593],
+        eg: [20],
+        sv: [503],
+        gq: [240],
+        er: [291],
+        ee: [372],
+        et: [251],
+        fk: [500],
+        fo: [298],
+        fj: [679],
+        fi: [358],
+        fr: [33],
+        pf: [689],
+        ga: [241],
+        gm: [220],
+        ge: [995],
+        de: [49],
+        gh: [233],
+        gi: [350],
+        gr: [30],
+        gl: [299],
+        gd: [1473],
+        gu: [1671],
+        gt: [502],
+        gg: [44],
+        gn: [224],
+        gw: [245],
+        gy: [592],
+        ht: [509],
+        hn: [504],
+        hk: [852],
+        hu: [36],
+        is: [354],
+        in: [91],
+        id: [62],
+        ir: [98],
+        iq: [964],
+        ie: [353],
+        im: [44],
+        il: [972],
+        it: [39],
+        ci: [225],
+        jm: [1876],
+        jp: [81],
+        je: [44],
+        jo: [962],
+        kz: [7],
+        ke: [254],
+        ki: [686],
+        xk: [383],
+        kw: [965],
+        kg: [996],
+        la: [856],
+        lv: [371],
+        lb: [961],
+        ls: [266],
+        lr: [231],
+        ly: [218],
+        li: [423],
+        lt: [370],
+        lu: [352],
+        mo: [853],
+        mk: [389],
+        mg: [261],
+        mw: [265],
+        my: [60],
+        mv: [960],
+        ml: [223],
+        mt: [356],
+        mh: [692],
+        mr: [222],
+        mu: [230],
+        yt: [262],
+        mx: [52],
+        fm: [691],
+        md: [373],
+        mc: [377],
+        mn: [976],
+        me: [382],
+        ms: [1664],
+        ma: [212],
+        mz: [258],
+        mm: [95],
+        na: [264],
+        nr: [674],
+        np: [977],
+        nl: [31],
+        an: [599],
+        nc: [687],
+        nz: [64],
+        ni: [505],
+        ne: [227],
+        ng: [234],
+        nu: [683],
+        kp: [850],
+        mp: [1670],
+        no: [47],
+        om: [968],
+        pk: [92],
+        pw: [680],
+        ps: [970],
+        pa: [507],
+        pg: [675],
+        py: [595],
+        pe: [51],
+        ph: [63],
+        pn: [64],
+        pl: [48],
+        pt: [351],
+        pr: [1787],
+        qa: [974],
+        cg: [242],
+        re: [262],
+        ro: [40],
+        ru: [7],
+        rw: [250],
+        bl: [590],
+        sh: [290],
+        kn: [1869],
+        lc: [1758],
+        mf: [590],
+        pm: [508],
+        vc: [1784],
+        ws: [685],
+        sm: [378],
+        st: [239],
+        sa: [966],
+        sn: [221],
+        rs: [381],
+        sc: [248],
+        sl: [232],
+        sg: [65],
+        sx: [1721],
+        sk: [421],
+        si: [386],
+        sb: [677],
+        so: [252],
+        za: [27],
+        kr: [82],
+        ss: [211],
+        es: [34],
+        lk: [94],
+        sd: [249],
+        sr: [597],
+        sj: [47],
+        sz: [268],
+        se: [46],
+        ch: [41],
+        sy: [963],
+        tw: [886],
+        tj: [992],
+        tz: [255],
+        th: [66],
+        tg: [228],
+        tk: [690],
+        to: [676],
+        tt: [1868],
+        tn: [216],
+        tr: [90],
+        tm: [993],
+        tc: [1649],
+        tv: [688],
+        vi: [1340],
+        ug: [256],
+        ua: [380],
+        ae: [971],
+        gb: [44],
+        us: [1],
+        uy: [598],
+        uz: [998],
+        vu: [678],
+        va: [379],
+        ve: [58],
+        vn: [84],
+        wf: [681],
+        eh: [212],
+        ye: [967],
+        zm: [260],
+        zw: [263],
+        mq: [596],
+        gp: [590],
+        gf: [594],
+        int: [882]
+      };
+      countries = ['af', 'al', 'dz', 'ad', 'ao', 'ai', 'ag', 'ar', 'am', 'aw', 'au', 'at', 'az', 'bs', 'bh', 'bd', 'bb', 'by', 'be', 'bz', 'bj', 'bm', 'bt', 'bo', 'ba', 'bw', 'br', 'vg', 'bn', 'bg', 'bf', 'bi', 'cv', 'kh', 'cm', 'ca', 'ky', 'cf', 'td', 'cl', 'cn', 'co', 'cg', 'cd', 'km', 'ck', 'cr', 'hr', 'cu', 'cz', 'dk', 'dj', 'dm', 'do', 'ec', 'eg', 'sv', 'ee', 'et', 'fk', 'fo', 'fj', 'fi', 'fr', 'gf', 'pf', 'ga', 'gm', 'ge', 'de', 'gh', 'gi', 'gr', 'gl', 'gd', 'gp', 'gu', 'gt', 'gg', 'gn', 'gw', 'gy', 'ht', 'hn', 'hk', 'hu', 'is', 'in', 'id', 'int', 'ir', 'iq', 'ie', 'im', 'il', 'it', 'ci', 'jm', 'jp', 'je', 'jo', 'kz', 'ke', 'kw', 'kg', 'la', 'lv', 'lb', 'ls', 'lr', 'ly', 'li', 'lt', 'lu', 'mo', 'mk', 'mg', 'mw', 'my', 'mv', 'ml', 'mt', 'mq', 'mr', 'mu', 'yt', 'mx', 'md', 'mc', 'mn', 'me', 'ms', 'ma', 'mz', 'mm', 'na', 'nr', 'np', 'nl', 'an', 'nc', 'nz', 'ni', 'ne', 'ng', 'kp', 'no', 'om', 'pk', 'ps', 'pa', 'pg', 'py', 'pe', 'ph', 'pl', 'pt', 'pr', 'qa', 're', 'ro', 'ru', 'rw', 'kn', 'lc', 'ws', 'sm', 'st', 'sa', 'sn', 'rs', 'sc', 'sl', 'sg', 'sk', 'si', 'sb', 'so', 'za', 'kr', 'es', 'lk', 'vc', 'sd', 'sr', 'sz', 'se', 'ch', 'sy', 'tw', 'tj', 'tz', 'th', 'tl', 'tg', 'to', 'tt', 'tn', 'tr', 'tm', 'tc', 'ug', 'ua', 'ae', 'gb', 'us', 'uy', 'uz', 'vu', 've', 'vn', 'ye', 'zm', 'zw'];
+      items = [];
 
-
-      Object.defineProperty(items, 'parsePhone', {
-        value: function value(phone) {
-          var defaultCountryCode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : items[0].code;
-
-          var countryCode = '';
-          phone = phone.replace('+', '');
-          items.forEach(function (item) {
-            var pattern = new RegExp('^' + item.code + '\\d+');
-            if (pattern.test(phone) && item.code.toString().length > countryCode.length) {
-              countryCode = item.code.toString();
-            }
-          });
-          if (countryCode.length === 0) {
-            countryCode = defaultCountryCode.toString();
-          }
-          return {
-            countryCode: Number(countryCode),
-            phoneNumber: phone.length > phone.length ? phone.substring(countryCode.length) : ''
-          };
+      CallingCodes = function () {
+        function CallingCodes() {
+          babelHelpers.classCallCheck(this, CallingCodes);
         }
-      });
 
-      _export('default', items);
+        babelHelpers.createClass(CallingCodes, null, [{
+          key: 'parsePhone',
+          value: function parsePhone(phone) {
+            var defaultCountryCode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.items[0].code;
+
+            var countryCode = '';
+            phone = phone.replace('+', '');
+            this.items.forEach(function (item) {
+              var pattern = new RegExp('^' + item.code + '\\d+');
+              if (pattern.test(phone) && item.code.toString().length > countryCode.length) {
+                countryCode = item.code.toString();
+              }
+            });
+            if (countryCode.length === 0) {
+              countryCode = defaultCountryCode.toString();
+            }
+            return {
+              countryCode: Number(countryCode),
+              phoneNumber: phone.length > countryCode.length ? phone.substring(countryCode.length) : ''
+            };
+          }
+        }, {
+          key: 'items',
+          get: function get() {
+            if (items.length === 0) {
+              countries.forEach(function (country) {
+                codes[country].forEach(function (code) {
+                  items.push({
+                    name: extractText(app.translator.trans('core.lib.countries.' + country)),
+                    code: code
+                  });
+                });
+              });
+              items.sort(function (a, b) {
+                if (typeof a.name.localeCompare !== 'undefinedundefined') {
+                  return a.name.localeCompare(b.name, app.data.locale, { sensitivity: 'base' });
+                }
+
+                if (a.name < b.name) {
+                  return -1;
+                } else if (a.name > b.name) {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              });
+            }
+            return items;
+          }
+        }]);
+        return CallingCodes;
+      }();
+
+      _export('default', CallingCodes);
     }
   };
 });;
@@ -24663,6 +24308,11 @@ System.register('flarum/utils/string', [], function (_export, _context) {
 
     return dom.text().replace(/\s+/g, ' ').trim();
   }
+  _export('getPlainContent', getPlainContent);
+
+  function stringify(input) {
+    return !input ? '' : String(input);
+  }
 
   /**
    * An array of DOM selectors to remove when getting plain content.
@@ -24670,7 +24320,7 @@ System.register('flarum/utils/string', [], function (_export, _context) {
    * @type {Array}
    */
 
-  _export('getPlainContent', getPlainContent);
+  _export('stringify', stringify);
 
   /**
    * Make a string's first character uppercase.
