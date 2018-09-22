@@ -29682,7 +29682,8 @@ System.register('flarum/components/WelcomeHero', ['flarum/Component', 'flarum/co
         babelHelpers.createClass(WelcomeHero, [{
           key: 'init',
           value: function init() {
-            this.hidden = localStorage.getItem('welcomeHidden');
+            // this.hidden = localStorage.getItem('welcomeHidden');
+            this.hidden = true;
           }
         }, {
           key: 'view',

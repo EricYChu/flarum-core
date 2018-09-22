@@ -7,7 +7,8 @@ import Button from 'flarum/components/Button';
  */
 export default class WelcomeHero extends Component {
   init() {
-    this.hidden = localStorage.getItem('welcomeHidden');
+    // this.hidden = localStorage.getItem('welcomeHidden');
+    this.hidden = true;
   }
 
   view() {
