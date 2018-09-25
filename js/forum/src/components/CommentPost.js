@@ -98,6 +98,10 @@ export default class CommentPost extends Post {
     // body with a preview.
     let preview;
     const updatePreview = () => {
+      if (!app.composer.component) {
+        clearInterval(updateInterval);
+        return;
+      }
       const content = app.composer.component.content();
 
       if (preview === content) return;

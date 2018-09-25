@@ -20854,6 +20854,10 @@ System.register('flarum/components/CommentPost', ['flarum/components/Post', 'fla
             // body with a preview.
             var preview = void 0;
             var updatePreview = function updatePreview() {
+              if (!app.composer.component) {
+                clearInterval(updateInterval);
+                return;
+              }
               var content = app.composer.component.content();
 
               if (preview === content) return;
@@ -27532,6 +27536,10 @@ System.register('flarum/components/ReplyPlaceholder', ['flarum/Component', 'flar
             // body with a preview.
             var preview = void 0;
             var updateInterval = setInterval(function () {
+              if (!app.composer.component) {
+                clearInterval(updateInterval);
+                return;
+              }
               var content = app.composer.component.content();
 
               if (preview === content) return;

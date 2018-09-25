@@ -52,6 +52,10 @@ export default class ReplyPlaceholder extends Component {
     // body with a preview.
     let preview;
     const updateInterval = setInterval(() => {
+      if (!app.composer.component) {
+        clearInterval(updateInterval);
+        return;
+      }
       const content = app.composer.component.content();
 
       if (preview === content) return;
