@@ -77,7 +77,7 @@ export default class ForgotPasswordModal extends Modal {
         theme: 'light',
         callback: val => {
           this.recaptchaResponse(val);
-          this.onsubmit();
+          this.$('form').submit();
         },
       }));
     }
@@ -93,7 +93,7 @@ export default class ForgotPasswordModal extends Modal {
   }
 
   onsubmit(e) {
-    e && e.preventDefault();
+    e.preventDefault();
 
     this.loading = true;
 

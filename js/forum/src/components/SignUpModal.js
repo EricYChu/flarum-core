@@ -168,7 +168,7 @@ export default class SignUpModal extends Modal {
         theme: 'light',
         callback: val => {
           this.recaptchaResponse(val);
-          this.onsubmit();
+          this.$('form').submit();
         },
       }));
     }
@@ -216,7 +216,7 @@ export default class SignUpModal extends Modal {
   }
 
   onsubmit(e) {
-    e && e.preventDefault();
+    e.preventDefault();
 
     this.alert = null;
     this.loading = true;

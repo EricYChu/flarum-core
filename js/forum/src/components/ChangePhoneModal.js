@@ -161,7 +161,7 @@ export default class ChangePhoneModal extends Modal {
         theme: 'light',
         callback: val => {
           this.recaptchaResponse(val);
-          this.onsubmit();
+          this.$('form').submit();
         },
       }));
     }
@@ -170,7 +170,7 @@ export default class ChangePhoneModal extends Modal {
   }
 
   onsubmit(e) {
-    e && e.preventDefault();
+    e.preventDefault();
 
     const phone = this.phone();
 

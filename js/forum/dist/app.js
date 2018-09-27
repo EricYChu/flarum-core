@@ -20614,7 +20614,7 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                 theme: 'light',
                 callback: function callback(val) {
                   _this2.recaptchaResponse(val);
-                  _this2.onsubmit();
+                  _this2.$('form').submit();
                 }
               }));
             }
@@ -20626,7 +20626,7 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
           value: function onsubmit(e) {
             var _this3 = this;
 
-            e && e.preventDefault();
+            e.preventDefault();
 
             var phone = this.phone();
 
@@ -23420,7 +23420,7 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
                 theme: 'light',
                 callback: function callback(val) {
                   _this2.recaptchaResponse(val);
-                  _this2.onsubmit();
+                  _this2.$('form').submit();
                 }
               }));
             }
@@ -23438,7 +23438,7 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
         }, {
           key: 'onsubmit',
           value: function onsubmit(e) {
-            e && e.preventDefault();
+            e.preventDefault();
 
             this.loading = true;
 
@@ -28864,7 +28864,7 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
                 theme: 'light',
                 callback: function callback(val) {
                   _this2.recaptchaResponse(val);
-                  _this2.onsubmit();
+                  _this2.$('form').submit();
                 }
               }));
             }
@@ -28914,7 +28914,7 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
           value: function onsubmit(e) {
             var _this3 = this;
 
-            e && e.preventDefault();
+            e.preventDefault();
 
             this.alert = null;
             this.loading = true;
