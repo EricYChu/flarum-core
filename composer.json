@@ -55,7 +55,8 @@
         "zendframework/zend-diactoros": "^1.1",
         "zendframework/zend-stratigility": "^1.3",
         "authy/php": "dev-master",
-        "behat/transliterator": "^1.2"
+        "behat/transliterator": "^1.2",
+        "google/recaptcha": "~1.1"
     },
     "require-dev": {
         "mockery/mockery": "^0.9.4",

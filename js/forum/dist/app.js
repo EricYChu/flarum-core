@@ -20449,6 +20449,20 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
              * @type {function}
              */
             this.password = m.prop('');
+
+            /**
+             * The value of the Google reCAPTCHA response.
+             *
+             * @type {Function}
+             */
+            this.recaptchaResponse = m.prop();
+
+            /**
+             * The id of the Google reCAPTCHA widget.
+             *
+             * @type {Function}
+             */
+            this.recaptchaId = m.prop();
           }
         }, {
           key: 'className',
@@ -20551,8 +20565,8 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                   'div',
                   { className: 'Form-group' },
                   Button.component({
-                    className: 'Button Button--primary Button--block',
-                    type: 'submit',
+                    className: 'Button Button--primary Button--block Button-submit',
+                    type: 'button',
                     loading: this.loading,
                     children: app.translator.trans('core.forum.change_phone.submit_button')
                   })
@@ -20589,11 +20603,30 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
             );
           }
         }, {
-          key: 'onsubmit',
-          value: function onsubmit(e) {
+          key: 'config',
+          value: function config() {
             var _this2 = this;
 
-            e.preventDefault();
+            var $el = this.$('.Button-submit');
+            if ($el.length && !$el.data('g-rendred')) {
+              this.recaptchaId(grecaptcha.render($el[0], {
+                sitekey: app.forum.attribute('recaptchaSiteKey'),
+                theme: 'light',
+                callback: function callback(val) {
+                  _this2.recaptchaResponse(val);
+                  _this2.onsubmit();
+                }
+              }));
+            }
+            $el.data('g-rendred', true);
+            m.redraw();
+          }
+        }, {
+          key: 'onsubmit',
+          value: function onsubmit(e) {
+            var _this3 = this;
+
+            e && e.preventDefault();
 
             var phone = this.phone();
 
@@ -20614,12 +20647,13 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
             };
 
             if (this.step === 1) {
+              data.recaptchaResponse = this.recaptchaResponse();
               app.session.user.save(data, {
                 errorHandler: this.onerror.bind(this),
                 meta: { password: this.password() }
               }).then(function () {
-                _this2.step++;
-                _this2.loaded();
+                _this3.step++;
+                _this3.loaded();
               }).catch(function () {}).then(this.loaded.bind(this));
             } else {
               data.verificationCode = this.verificationCode();
@@ -20630,8 +20664,8 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
                 errorHandler: this.onerror.bind(this)
               }).then(function () {
                 app.session.user.data.attributes.phone = phone;
-                _this2.success = true;
-                _this2.loaded();
+                _this3.success = true;
+                _this3.loaded();
               }, this.loaded.bind(this));
             }
           }
@@ -20643,6 +20677,7 @@ System.register('flarum/components/ChangePhoneModal', ['flarum/components/Modal'
         }, {
           key: 'onerror',
           value: function onerror(error) {
+            grecaptcha.reset(this.recaptchaId());
             if (error.status === 401) {
               error.alert.props.children = app.translator.trans('core.forum.change_phone.incorrect_password_message');
             }
@@ -23313,6 +23348,20 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
              * @type {Function}
              */
             this.phone = m.prop(this.props.phone || '');
+
+            /**
+             * The value of the Google reCAPTCHA response.
+             *
+             * @type {Function}
+             */
+            this.recaptchaResponse = m.prop();
+
+            /**
+             * The id of the Google reCAPTCHA widget.
+             *
+             * @type {Function}
+             */
+            this.recaptchaId = m.prop();
           }
         }, {
           key: 'className',
@@ -23350,14 +23399,33 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
                   'div',
                   { className: 'Form-group' },
                   Button.component({
-                    className: 'Button Button--primary Button--block',
-                    type: 'submit',
+                    className: 'Button Button--primary Button--block Button-submit',
+                    type: 'button',
                     loading: this.loading,
                     children: app.translator.trans('core.forum.forgot_password.submit_button')
                   })
                 )
               )
             );
+          }
+        }, {
+          key: 'config',
+          value: function config() {
+            var _this2 = this;
+
+            var $el = this.$('.Button-submit');
+            if ($el.length && !$el.data('g-rendred')) {
+              this.recaptchaId(grecaptcha.render($el[0], {
+                sitekey: app.forum.attribute('recaptchaSiteKey'),
+                theme: 'light',
+                callback: function callback(val) {
+                  _this2.recaptchaResponse(val);
+                  _this2.onsubmit();
+                }
+              }));
+            }
+            $el.data('g-rendred', true);
+            m.redraw();
           }
         }, {
           key: 'resetPassword',
@@ -23370,20 +23438,21 @@ System.register('flarum/components/ForgotPasswordModal', ['flarum/components/Mod
         }, {
           key: 'onsubmit',
           value: function onsubmit(e) {
-            e.preventDefault();
+            e && e.preventDefault();
 
             this.loading = true;
 
             app.request({
               method: 'POST',
               url: app.forum.attribute('apiUrl') + '/forgot',
-              data: { phone: this.phone() },
+              data: { phone: this.phone(), recaptchaResponse: this.recaptchaResponse() },
               errorHandler: this.onerror.bind(this)
             }).then(this.resetPassword.bind(this)).catch(function () {}).then(this.loaded.bind(this));
           }
         }, {
           key: 'onerror',
           value: function onerror(error) {
+            grecaptcha.reset(this.recaptchaId());
             if (error.status === 404) {
               error.alert.props.children = app.translator.trans('core.forum.forgot_password.not_found_message');
             }
@@ -28649,6 +28718,20 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
              * @type {Function}
              */
             this.password = m.prop(this.props.password || '');
+
+            /**
+             * The value of the Google reCAPTCHA response.
+             *
+             * @type {Function}
+             */
+            this.recaptchaResponse = m.prop();
+
+            /**
+             * The id of the Google reCAPTCHA widget.
+             *
+             * @type {Function}
+             */
+            this.recaptchaId = m.prop();
           }
         }, {
           key: 'className',
@@ -28715,6 +28798,17 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
                   value: this.phoneNumber(),
                   onchange: m.withAttr('value', this.phoneNumber),
                   disabled: this.loading })
+              ), m(
+                'div',
+                { className: 'Form-group' },
+                m(
+                  Button,
+                  {
+                    className: 'Button Button--primary Button--block Button-next',
+                    type: 'button',
+                    loading: this.loading },
+                  app.translator.trans('core.forum.sign_up.next_button')
+                )
               )] : '',
               this.step === 2 ? [m(
                 'div',
@@ -28744,8 +28838,7 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
                   value: this.password(),
                   onchange: m.withAttr('value', this.password),
                   disabled: this.loading })
-              )] : '',
-              m(
+              ), m(
                 'div',
                 { className: 'Form-group' },
                 m(
@@ -28754,10 +28847,29 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
                     className: 'Button Button--primary Button--block',
                     type: 'submit',
                     loading: this.loading },
-                  app.translator.trans(this.step === 2 ? 'core.forum.sign_up.submit_button' : 'core.forum.sign_up.next_button')
+                  app.translator.trans('core.forum.sign_up.submit_button')
                 )
-              )
+              )] : ''
             )];
+          }
+        }, {
+          key: 'config',
+          value: function config() {
+            var _this2 = this;
+
+            var $el = this.$('.Button-next');
+            if ($el.length && !$el.data('g-rendred')) {
+              this.recaptchaId(grecaptcha.render($el[0], {
+                sitekey: app.forum.attribute('recaptchaSiteKey'),
+                theme: 'light',
+                callback: function callback(val) {
+                  _this2.recaptchaResponse(val);
+                  _this2.onsubmit();
+                }
+              }));
+            }
+            $el.data('g-rendred', true);
+            m.redraw();
           }
         }, {
           key: 'isBackable',
@@ -28783,6 +28895,12 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
             app.modal.show(new LogInModal(props));
           }
         }, {
+          key: 'onerror',
+          value: function onerror(error) {
+            grecaptcha.reset(this.recaptchaId());
+            babelHelpers.get(SignUpModal.prototype.__proto__ || Object.getPrototypeOf(SignUpModal.prototype), 'onerror', this).call(this, error);
+          }
+        }, {
           key: 'onready',
           value: function onready() {
             if (this.props.username && !this.props.phoneNumber) {
@@ -28794,9 +28912,9 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
         }, {
           key: 'onsubmit',
           value: function onsubmit(e) {
-            var _this2 = this;
+            var _this3 = this;
 
-            e.preventDefault();
+            e && e.preventDefault();
 
             this.alert = null;
             this.loading = true;
@@ -28819,12 +28937,12 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
               data: data,
               errorHandler: this.onerror.bind(this)
             }).then(function () {
-              if (_this2.step === 2) {
+              if (_this3.step === 2) {
                 window.location.reload();
               } else {
-                _this2.step++;
-                _this2.loaded();
-                _this2.$('[name=verificationCode]').select();
+                _this3.step++;
+                _this3.loaded();
+                _this3.$('[name=verificationCode]').select();
               }
             }, this.loaded.bind(this));
           }
@@ -28844,6 +28962,10 @@ System.register('flarum/components/SignUpModal', ['flarum/components/Modal', 'fl
             var data = {
               phone: this.phone()
             };
+
+            if (this.step === 1) {
+              data.recaptchaResponse = this.recaptchaResponse();
+            }
 
             if (this.step === 2) {
               data.verificationCode = this.verificationCode();

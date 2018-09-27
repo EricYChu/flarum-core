@@ -1,6 +1,6 @@
 <?php
 
-namespace Flarum\Core\PhoneVerification;
+namespace Flarum\Core\PhoneVerification\Twilio;
 
 use Authy\AuthyResponse;
 use GuzzleHttp\Psr7\Response;

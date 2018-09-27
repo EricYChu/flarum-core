@@ -54,6 +54,20 @@ export default class SignUpModal extends Modal {
      * @type {Function}
      */
     this.password = m.prop(this.props.password || '');
+
+    /**
+     * The value of the Google reCAPTCHA response.
+     *
+     * @type {Function}
+     */
+    this.recaptchaResponse = m.prop();
+
+    /**
+     * The id of the Google reCAPTCHA widget.
+     *
+     * @type {Function}
+     */
+    this.recaptchaId = m.prop();
   }
 
   className() {
@@ -101,6 +115,14 @@ export default class SignUpModal extends Modal {
                    value={this.phoneNumber()}
                    onchange={m.withAttr('value', this.phoneNumber)}
                    disabled={this.loading} />
+          </div>,
+          <div className="Form-group">
+            <Button
+              className="Button Button--primary Button--block Button-next"
+              type="button"
+              loading={this.loading}>
+              {app.translator.trans('core.forum.sign_up.next_button')}
+            </Button>
           </div>
         ] : ''}
 
@@ -124,19 +146,34 @@ export default class SignUpModal extends Modal {
                    value={this.password()}
                    onchange={m.withAttr('value', this.password)}
                    disabled={this.loading} />
+          </div>,
+          <div className="Form-group">
+            <Button
+              className="Button Button--primary Button--block"
+              type="submit"
+              loading={this.loading}>
+              {app.translator.trans('core.forum.sign_up.submit_button')}
+            </Button>
           </div>
         ] : ''}
-
-        <div className="Form-group">
-          <Button
-            className="Button Button--primary Button--block"
-            type="submit"
-            loading={this.loading}>
-            {app.translator.trans(this.step === 2 ? 'core.forum.sign_up.submit_button' : 'core.forum.sign_up.next_button')}
-          </Button>
-        </div>
       </div>
     ];
+  }
+
+  config() {
+    const $el = this.$('.Button-next');
+    if ($el.length && !$el.data('g-rendred')) {
+      this.recaptchaId(grecaptcha.render($el[0], {
+        sitekey: app.forum.attribute('recaptchaSiteKey'),
+        theme: 'light',
+        callback: val => {
+          this.recaptchaResponse(val);
+          this.onsubmit();
+        },
+      }));
+    }
+    $el.data('g-rendred', true);
+    m.redraw();
   }
 
   isBackable() {
@@ -165,6 +202,11 @@ export default class SignUpModal extends Modal {
     app.modal.show(new LogInModal(props));
   }
 
+  onerror(error) {
+    grecaptcha.reset(this.recaptchaId());
+    super.onerror(error);
+  }
+
   onready() {
     if (this.props.username && !this.props.phoneNumber) {
       this.$('[name=phoneNumber]').select();
@@ -174,7 +216,7 @@ export default class SignUpModal extends Modal {
   }
 
   onsubmit(e) {
-    e.preventDefault();
+    e && e.preventDefault();
 
     this.alert = null;
     this.loading = true;
@@ -229,6 +271,10 @@ export default class SignUpModal extends Modal {
     const data = {
       phone: this.phone()
     };
+
+    if (this.step === 1) {
+      data.recaptchaResponse = this.recaptchaResponse();
+    }
 
     if (this.step === 2) {
       data.verificationCode = this.verificationCode();

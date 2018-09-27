@@ -301,7 +301,10 @@ class WebAppView
 
         $baseUrl = array_get($forum, 'data.attributes.baseUrl');
         $view->cssUrls = $this->buildCssUrls($baseUrl);
-        $view->jsUrls = $this->buildJsUrls($baseUrl);
+
+        $locale = $this->locales->getLocale();
+        $recaptchaUrl = 'https://www.'.(strtolower($locale) == 'zh-cn' ? 'recaptcha.net' : 'google.com').'/recaptcha/api.js?hl='.$locale.'&render=explicit';
+        $view->jsUrls = array_merge([$recaptchaUrl], $this->buildJsUrls($baseUrl));
 
         $view->head = $this->buildHeadContent();
         $view->foot = implode("\n", $this->foot);

@@ -47,6 +47,20 @@ export default class ChangePhoneModal extends Modal {
      * @type {function}
      */
     this.password = m.prop('');
+
+    /**
+     * The value of the Google reCAPTCHA response.
+     *
+     * @type {Function}
+     */
+    this.recaptchaResponse = m.prop();
+
+    /**
+     * The id of the Google reCAPTCHA widget.
+     *
+     * @type {Function}
+     */
+    this.recaptchaId = m.prop();
   }
 
   className() {
@@ -108,8 +122,8 @@ export default class ChangePhoneModal extends Modal {
             </div>,
             <div className="Form-group">
               {Button.component({
-                className: 'Button Button--primary Button--block',
-                type: 'submit',
+                className: 'Button Button--primary Button--block Button-submit',
+                type: 'button',
                 loading: this.loading,
                 children: app.translator.trans('core.forum.change_phone.submit_button')
               })}
@@ -139,8 +153,24 @@ export default class ChangePhoneModal extends Modal {
     );
   }
 
+  config() {
+    const $el = this.$('.Button-submit');
+    if ($el.length && !$el.data('g-rendred')) {
+      this.recaptchaId(grecaptcha.render($el[0], {
+        sitekey: app.forum.attribute('recaptchaSiteKey'),
+        theme: 'light',
+        callback: val => {
+          this.recaptchaResponse(val);
+          this.onsubmit();
+        },
+      }));
+    }
+    $el.data('g-rendred', true);
+    m.redraw();
+  }
+
   onsubmit(e) {
-    e.preventDefault();
+    e && e.preventDefault();
 
     const phone = this.phone();
 
@@ -161,6 +191,7 @@ export default class ChangePhoneModal extends Modal {
     };
 
     if (this.step === 1) {
+      data.recaptchaResponse = this.recaptchaResponse();
       app.session.user.save(data, {
           errorHandler: this.onerror.bind(this),
           meta: {password: this.password()}
@@ -195,6 +226,7 @@ export default class ChangePhoneModal extends Modal {
   }
 
   onerror(error) {
+    grecaptcha.reset(this.recaptchaId());
     if (error.status === 401) {
       error.alert.props.children = app.translator.trans('core.forum.change_phone.incorrect_password_message');
     }

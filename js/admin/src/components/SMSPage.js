@@ -12,7 +12,12 @@ export default class SMSPage extends Page {
 
     this.fields = [
       'sms_driver',
+      'sms_sender_name',
       'sms_twilio_verification_api_key',
+      'sms_paasoo_api_key',
+      'sms_paasoo_api_secret',
+      'sms_paasoo_sender_number',
+      'sms_paasoo_cn_message_template',
     ];
     this.values = {};
 
@@ -41,7 +46,22 @@ export default class SMSPage extends Page {
               className: 'SMSPage-SMSSettings',
               children: [
                 <div className="SMSPage-SMSSettings-input">
-                  <input className="FormControl" value={this.values.sms_driver() || ''} oninput={m.withAttr('value', this.values.sms_driver)} />
+                  <select className="FormControl" value={this.values.sms_driver() || ''}
+                          onchange={m.withAttr('value', this.values.sms_driver)}>
+                    <option value="PaaSoo">PaaSoo</option>
+                    <option value="Twilio">Twilio</option>
+                  </select>
+                </div>
+              ]
+            })}
+
+            {FieldSet.component({
+              label: app.translator.trans('core.admin.sms.sender_name_label'),
+              className: 'SMSPage-SMSSettings',
+              children: [
+                <div className="SMSPage-SMSSettings-input">
+                  <input className="FormControl" value={this.values.sms_sender_name() || ''}
+                         oninput={m.withAttr('value', this.values.sms_sender_name)}/>
                 </div>
               ]
             })}
@@ -51,8 +71,36 @@ export default class SMSPage extends Page {
               className: 'SMSPage-SMSSettings',
               children: [
                 <div className="SMSPage-SMSSettings-input">
-                  <label>{app.translator.trans('core.admin.sms.twilio_verification_api_key')}</label>
-                  <input className="FormControl" value={this.values.sms_twilio_verification_api_key() || ''} oninput={m.withAttr('value', this.values.sms_twilio_verification_api_key)} />
+                  <label>{app.translator.trans('core.admin.sms.twilio_verification_api_key_label')}</label>
+                  <input className="FormControl" value={this.values.sms_twilio_verification_api_key() || ''}
+                         oninput={m.withAttr('value', this.values.sms_twilio_verification_api_key)}/>
+                </div>
+              ]
+            })}
+
+            {FieldSet.component({
+              label: app.translator.trans('core.admin.sms.paasoo_heading'),
+              className: 'SMSPage-SMSSettings',
+              children: [
+                <div className="SMSPage-SMSSettings-input">
+                  <label>{app.translator.trans('core.admin.sms.paasoo_api_key_label')}</label>
+                  <input className="FormControl" value={this.values.sms_paasoo_api_key() || ''}
+                         oninput={m.withAttr('value', this.values.sms_paasoo_api_key)}/>
+                </div>,
+                <div className="SMSPage-SMSSettings-input">
+                  <label>{app.translator.trans('core.admin.sms.paasoo_api_secret_label')}</label>
+                  <input className="FormControl" value={this.values.sms_paasoo_api_secret() || ''}
+                         oninput={m.withAttr('value', this.values.sms_paasoo_api_secret)}/>
+                </div>,
+                <div className="SMSPage-SMSSettings-input">
+                  <label>{app.translator.trans('core.admin.sms.paasoo_sender_number_label')}</label>
+                  <input className="FormControl" value={this.values.sms_paasoo_sender_number() || ''}
+                         oninput={m.withAttr('value', this.values.sms_paasoo_sender_number)}/>
+                </div>,
+                <div className="SMSPage-SMSSettings-input">
+                  <label>{app.translator.trans('core.admin.sms.paasoo_cn_message_template_label')}</label>
+                  <input className="FormControl" value={this.values.sms_paasoo_cn_message_template() || ''}
+                         oninput={m.withAttr('value', this.values.sms_paasoo_cn_message_template)}/>
                 </div>
               ]
             })}

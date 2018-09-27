@@ -16,6 +16,12 @@ use Flarum\Core\Exception\PermissionDeniedException;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
+use Flarum\Settings\SettingsRepositoryInterface;
+use Illuminate\Validation\Validator;
+use Illuminate\Contracts\Validation\ValidationException;
+use ReCaptcha\ReCaptcha;
+use Symfony\Component\Translation\TranslatorInterface;
+use Illuminate\Contracts\Validation\Factory;
 
 class UpdateUserController extends AbstractResourceController
 {
@@ -35,11 +41,29 @@ class UpdateUserController extends AbstractResourceController
     protected $bus;
 
     /**
+     * @var Factory
+     */
+    private $validatorFactory;
+
+    /**
+     * @var SettingsRepositoryInterface
+     */
+    protected $settings;
+
+    /**
+     * @var TranslatorInterface
+     */
+    protected $translator;
+
+    /**
      * @param Dispatcher $bus
      */
-    public function __construct(Dispatcher $bus)
+    public function __construct(Dispatcher $bus, Factory $validatorFactory, SettingsRepositoryInterface $settings, TranslatorInterface $translator)
     {
         $this->bus = $bus;
+        $this->validatorFactory = $validatorFactory;
+        $this->settings = $settings;
+        $this->translator = $translator;
     }
 
     /**
@@ -58,6 +82,22 @@ class UpdateUserController extends AbstractResourceController
 
             if (! $actor->checkPassword($password)) {
                 throw new PermissionDeniedException;
+            }
+        }
+
+        if (isset($data['attributes']['phone']) && $actor->id == $id) {
+            $recaptchaResponse = array_get($data, 'attributes.recaptchaResponse', '');
+            $validation = $this->validatorFactory->make(['recaptchaResponse' => $recaptchaResponse], ['recaptchaResponse' => 'required']);
+            $validation->after(function (Validator $validator) use ($recaptchaResponse) {
+                if ($validator->errors()->isEmpty()) {
+                    $recaptcha = new ReCaptcha($this->settings->get('google_recaptcha_secret_key'));
+                    if (! $recaptcha->verify($recaptchaResponse)->isSuccess()) {
+                        $validator->errors()->add('recaptchaResponse', $this->translator->trans('core.api.invalid_recaptcha_response_message'));
+                    }
+                }
+            });
+            if ($validation->fails()) {
+                throw new ValidationException($validation);
             }
         }
 

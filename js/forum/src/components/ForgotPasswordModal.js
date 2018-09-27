@@ -21,6 +21,20 @@ export default class ForgotPasswordModal extends Modal {
      * @type {Function}
      */
     this.phone = m.prop(this.props.phone || '');
+
+    /**
+     * The value of the Google reCAPTCHA response.
+     *
+     * @type {Function}
+     */
+    this.recaptchaResponse = m.prop();
+
+    /**
+     * The id of the Google reCAPTCHA widget.
+     *
+     * @type {Function}
+     */
+    this.recaptchaId = m.prop();
   }
 
   className() {
@@ -44,8 +58,8 @@ export default class ForgotPasswordModal extends Modal {
           </div>
           <div className="Form-group">
             {Button.component({
-              className: 'Button Button--primary Button--block',
-              type: 'submit',
+              className: 'Button Button--primary Button--block Button-submit',
+              type: 'button',
               loading: this.loading,
               children: app.translator.trans('core.forum.forgot_password.submit_button')
             })}
@@ -53,6 +67,22 @@ export default class ForgotPasswordModal extends Modal {
         </div>
       </div>
     );
+  }
+
+  config() {
+    const $el = this.$('.Button-submit');
+    if ($el.length && !$el.data('g-rendred')) {
+      this.recaptchaId(grecaptcha.render($el[0], {
+        sitekey: app.forum.attribute('recaptchaSiteKey'),
+        theme: 'light',
+        callback: val => {
+          this.recaptchaResponse(val);
+          this.onsubmit();
+        },
+      }));
+    }
+    $el.data('g-rendred', true);
+    m.redraw();
   }
 
   resetPassword() {
@@ -63,14 +93,14 @@ export default class ForgotPasswordModal extends Modal {
   }
 
   onsubmit(e) {
-    e.preventDefault();
+    e && e.preventDefault();
 
     this.loading = true;
 
     app.request({
       method: 'POST',
       url: app.forum.attribute('apiUrl') + '/forgot',
-      data: {phone: this.phone()},
+      data: {phone: this.phone(), recaptchaResponse: this.recaptchaResponse()},
       errorHandler: this.onerror.bind(this)
     })
       .then(this.resetPassword.bind(this))
@@ -79,6 +109,7 @@ export default class ForgotPasswordModal extends Modal {
   }
 
   onerror(error) {
+    grecaptcha.reset(this.recaptchaId());
     if (error.status === 404) {
       error.alert.props.children = app.translator.trans('core.forum.forgot_password.not_found_message');
     }
