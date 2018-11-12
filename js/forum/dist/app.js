@@ -20816,6 +20816,11 @@ System.register('flarum/components/CommentPost', ['flarum/components/Post', 'fla
              */
             this.revealContent = false;
 
+            this.showTranslatation = false;
+            this.translatation = '';
+
+            this.props.post.translatation = '';
+
             // Create an instance of the component that displays the post's author so
             // that we can force the post to rerender when the user card is shown.
             this.postUser = new PostUser({ post: this.props.post });
@@ -20823,6 +20828,10 @@ System.register('flarum/components/CommentPost', ['flarum/components/Post', 'fla
               return _this2.postUser.cardVisible;
             }, function () {
               return _this2.isEditing();
+            }, function () {
+              return _this2.showTranslatation;
+            }, function () {
+              return _this2.translatation;
             });
           }
         }, {
@@ -20837,7 +20846,11 @@ System.register('flarum/components/CommentPost', ['flarum/components/Post', 'fla
               m('ul', listItems(this.headerItems().toArray()))
             ), m(
               'div',
-              { className: 'Post-body' },
+              { className: 'Post-body translated' },
+              m.trust(this.translatation)
+            ), m(
+              'div',
+              { className: 'Post-body original' },
               this.isEditing() ? m('div', { className: 'Post-preview', config: this.configPreview.bind(this) }) : m.trust(this.props.post.contentHtml())
             )]);
           }
@@ -20851,7 +20864,7 @@ System.register('flarum/components/CommentPost', ['flarum/components/Post', 'fla
             // If the post content has changed since the last render, we'll run through
             // all of the <script> tags in the content and evaluate them. This is
             // necessary because TextFormatter outputs them for e.g. syntax highlighting.
-            if (context.contentHtml !== contentHtml) {
+            if (context.contentHtml !== contentHtml || this.showTranslatation === true) {
               this.$('.Post-body script').each(function () {
                 eval.call(window, $(this).text());
               });
@@ -20875,7 +20888,8 @@ System.register('flarum/components/CommentPost', ['flarum/components/Post', 'fla
               'Post--hidden': post.isHidden(),
               'Post--edited': post.isEdited(),
               'revealContent': this.revealContent,
-              'editing': this.isEditing()
+              'editing': this.isEditing(),
+              'translated': this.showTranslatation
             });
 
             return attrs;
@@ -20940,9 +20954,46 @@ System.register('flarum/components/CommentPost', ['flarum/components/Post', 'fla
             return items;
           }
         }, {
+          key: 'translate',
+          value: function translate() {
+            var _this3 = this;
+
+            var contentHtml = this.props.post.contentHtml();
+            $.ajax({
+              method: 'POST',
+              url: 'https://translator-api.acgn.io/',
+              data: {
+                to: app.data.locale,
+                type: 'html',
+                text: [contentHtml]
+              }
+            }).done(function (msg) {
+              _this3.translatation = msg[0];
+              _this3.showTranslatation = true;
+              m.redraw();
+            });
+          }
+        }, {
           key: 'actionItems',
           value: function actionItems() {
+            var _this4 = this;
+
             var items = babelHelpers.get(CommentPost.prototype.__proto__ || Object.getPrototypeOf(CommentPost.prototype), 'actionItems', this).call(this);
+            items.add('translate', Button.component({
+              children: app.translator.trans(this.showTranslatation ? 'core.forum.post.original_link' : 'core.forum.post.translate_link'),
+              className: 'Button Button--link',
+              onclick: function onclick() {
+                if (_this4.showTranslatation) {
+                  _this4.showTranslatation = false;
+                } else {
+                  if (_this4.translatation) {
+                    _this4.showTranslatation = true;
+                  } else {
+                    _this4.translate();
+                  }
+                }
+              }
+            }));
             return items;
           }
         }]);

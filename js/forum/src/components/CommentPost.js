@@ -31,12 +31,19 @@ export default class CommentPost extends Post {
      */
     this.revealContent = false;
 
+    this.showTranslatation = false;
+    this.translatation = '';
+
+    this.props.post.translatation = '';
+
     // Create an instance of the component that displays the post's author so
     // that we can force the post to rerender when the user card is shown.
     this.postUser = new PostUser({post: this.props.post});
     this.subtree.check(
       () => this.postUser.cardVisible,
-      () => this.isEditing()
+      () => this.isEditing(),
+      () => this.showTranslatation,
+      () => this.translatation
     );
   }
 
@@ -46,10 +53,14 @@ export default class CommentPost extends Post {
     // be reverted when we upgrade to Mithril 1.0.
     return super.content().concat([
       <header className="Post-header">{m('ul', listItems(this.headerItems().toArray()))}</header>,
-      <div className="Post-body">
+      <div className="Post-body translated">{m.trust(this.translatation)}</div>,
+      <div className="Post-body original">
         {this.isEditing()
           ? <div className="Post-preview" config={this.configPreview.bind(this)}/>
           : m.trust(this.props.post.contentHtml())}
+        {/*{this.isEditing()*/}
+          {/*? <div className="Post-preview" config={this.configPreview.bind(this)}/>*/}
+          {/*: m.trust(this.props.post.contentHtml())}*/}
       </div>
     ]);
   }
@@ -62,7 +73,7 @@ export default class CommentPost extends Post {
     // If the post content has changed since the last render, we'll run through
     // all of the <script> tags in the content and evaluate them. This is
     // necessary because TextFormatter outputs them for e.g. syntax highlighting.
-    if (context.contentHtml !== contentHtml) {
+    if (context.contentHtml !== contentHtml || this.showTranslatation === true) {
       this.$('.Post-body script').each(function() {
         eval.call(window, $(this).text());
       });
@@ -85,7 +96,8 @@ export default class CommentPost extends Post {
       'Post--hidden': post.isHidden(),
       'Post--edited': post.isEdited(),
       'revealContent': this.revealContent,
-      'editing': this.isEditing()
+      'editing': this.isEditing(),
+      'translated': this.showTranslatation
     });
 
     return attrs;
@@ -155,8 +167,43 @@ export default class CommentPost extends Post {
     return items;
   }
 
+  translate() {
+    const contentHtml = this.props.post.contentHtml();
+    $.ajax({
+        method: 'POST',
+        url: 'https://translator-api.acgn.io/',
+        data: {
+          to: app.data.locale,
+          type: 'html',
+          text: [contentHtml]
+        }
+      })
+      .done(msg => {
+        this.translatation = msg[0];
+        this.showTranslatation = true;
+        m.redraw();
+      });
+  }
+
   actionItems() {
     const items = super.actionItems();
+    items.add('translate',
+      Button.component({
+        children: app.translator.trans(this.showTranslatation ? 'core.forum.post.original_link' : 'core.forum.post.translate_link'),
+        className: 'Button Button--link',
+        onclick: () => {
+          if (this.showTranslatation) {
+            this.showTranslatation = false;
+          } else {
+            if (this.translatation) {
+              this.showTranslatation = true;
+            } else {
+              this.translate();
+            }
+          }
+        }
+      })
+    );
     return items;
   }
 }

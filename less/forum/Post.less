@@ -421,3 +421,15 @@
     position: relative;
   }
 }
+
+.Post-body.translated {
+  display: none;
+}
+.Post.translated {
+  .Post-body.translated {
+    display: block;
+  }
+  .Post-body.original {
+    display: none;
+  }
+}
