@@ -154,4 +154,9 @@ export default class CommentPost extends Post {
 
     return items;
   }
+
+  actionItems() {
+    const items = super.actionItems();
+    return items;
+  }
 }

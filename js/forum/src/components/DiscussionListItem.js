@@ -14,6 +14,7 @@ import DiscussionControls from 'flarum/utils/DiscussionControls';
 import slidable from 'flarum/utils/slidable';
 import extractText from 'flarum/utils/extractText';
 import classList from 'flarum/utils/classList';
+import { truncate } from 'flarum/utils/string';
 
 /**
  * The `DiscussionListItem` component shows a single discussion in the
@@ -104,12 +105,6 @@ export default class DiscussionListItem extends Component {
             <ul className="DiscussionListItem-info">{listItems(this.infoItems().toArray())}</ul>
           </a>
 
-          <span className="DiscussionListItem-count"
-            onclick={this.markAsRead.bind(this)}
-            title={showUnread ? app.translator.trans('core.forum.discussion_list.mark_as_read_tooltip') : ''}>
-            {abbreviateNumber(discussion[showUnread ? 'unreadCount' : 'repliesCount']())}
-          </span>
-
           {relevantPosts && relevantPosts.length
             ? <div className="DiscussionListItem-relevantPosts">
                 {relevantPosts.map(post => PostPreview.component({post, highlight: this.props.params.q}))}
@@ -187,13 +182,35 @@ export default class DiscussionListItem extends Component {
    */
   infoItems() {
     const items = new ItemList();
+    const discussion = this.props.discussion;
+    const isUnread = discussion.isUnread();
+    const showUnread = !this.showRepliesCount() && isUnread;
+    const startPost = discussion.startPost();
 
     items.add('terminalPost',
       TerminalPost.component({
         discussion: this.props.discussion,
         lastPost: !this.showStartPost()
-      })
+      }),
+      100
     );
+
+    if (startPost) {
+      const excerpt = <span>{truncate(startPost.contentPlain(), 200)}</span>;
+      const imgs = $(startPost.contentHtml()).find('img');
+
+      if (imgs.length) {
+        items.add('cover', m.trust(imgs[0]), 90);
+      }
+
+      items.add('excerpt', excerpt, 50);
+    }
+
+    items.add('count', <span className="DiscussionListItem-count"
+                             onclick={this.markAsRead.bind(this)}
+                             title={showUnread ? app.translator.trans('core.forum.discussion_list.mark_as_read_tooltip') : ''}>
+            {abbreviateNumber(discussion[showUnread ? 'unreadCount' : 'repliesCount']())}
+          </span>, 30);
 
     return items;
   }

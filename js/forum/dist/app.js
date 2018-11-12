@@ -20939,6 +20939,12 @@ System.register('flarum/components/CommentPost', ['flarum/components/Post', 'fla
 
             return items;
           }
+        }, {
+          key: 'actionItems',
+          value: function actionItems() {
+            var items = babelHelpers.get(CommentPost.prototype.__proto__ || Object.getPrototypeOf(CommentPost.prototype), 'actionItems', this).call(this);
+            return items;
+          }
         }]);
         return CommentPost;
       }(Post);
@@ -21937,10 +21943,10 @@ System.register('flarum/components/DiscussionList', ['flarum/Component', 'flarum
 });;
 'use strict';
 
-System.register('flarum/components/DiscussionListItem', ['flarum/Component', 'flarum/helpers/avatar', 'flarum/helpers/listItems', 'flarum/helpers/highlight', 'flarum/helpers/icon', 'flarum/utils/humanTime', 'flarum/utils/ItemList', 'flarum/utils/abbreviateNumber', 'flarum/components/Dropdown', 'flarum/components/TerminalPost', 'flarum/components/PostPreview', 'flarum/utils/SubtreeRetainer', 'flarum/utils/DiscussionControls', 'flarum/utils/slidable', 'flarum/utils/extractText', 'flarum/utils/classList'], function (_export, _context) {
+System.register('flarum/components/DiscussionListItem', ['flarum/Component', 'flarum/helpers/avatar', 'flarum/helpers/listItems', 'flarum/helpers/highlight', 'flarum/helpers/icon', 'flarum/utils/humanTime', 'flarum/utils/ItemList', 'flarum/utils/abbreviateNumber', 'flarum/components/Dropdown', 'flarum/components/TerminalPost', 'flarum/components/PostPreview', 'flarum/utils/SubtreeRetainer', 'flarum/utils/DiscussionControls', 'flarum/utils/slidable', 'flarum/utils/extractText', 'flarum/utils/classList', 'flarum/utils/string'], function (_export, _context) {
   "use strict";
 
-  var Component, avatar, listItems, highlight, icon, humanTime, ItemList, abbreviateNumber, Dropdown, TerminalPost, PostPreview, SubtreeRetainer, DiscussionControls, slidable, extractText, classList, DiscussionListItem;
+  var Component, avatar, listItems, highlight, icon, humanTime, ItemList, abbreviateNumber, Dropdown, TerminalPost, PostPreview, SubtreeRetainer, DiscussionControls, slidable, extractText, classList, truncate, DiscussionListItem;
   return {
     setters: [function (_flarumComponent) {
       Component = _flarumComponent.default;
@@ -21974,6 +21980,8 @@ System.register('flarum/components/DiscussionListItem', ['flarum/Component', 'fl
       extractText = _flarumUtilsExtractText.default;
     }, function (_flarumUtilsClassList) {
       classList = _flarumUtilsClassList.default;
+    }, function (_flarumUtilsString) {
+      truncate = _flarumUtilsString.truncate;
     }],
     execute: function () {
       DiscussionListItem = function (_Component) {
@@ -22080,13 +22088,6 @@ System.register('flarum/components/DiscussionListItem', ['flarum/Component', 'fl
                     listItems(this.infoItems().toArray())
                   )
                 ),
-                m(
-                  'span',
-                  { className: 'DiscussionListItem-count',
-                    onclick: this.markAsRead.bind(this),
-                    title: showUnread ? app.translator.trans('core.forum.discussion_list.mark_as_read_tooltip') : '' },
-                  abbreviateNumber(discussion[showUnread ? 'unreadCount' : 'repliesCount']())
-                ),
                 relevantPosts && relevantPosts.length ? m(
                   'div',
                   { className: 'DiscussionListItem-relevantPosts' },
@@ -22144,11 +22145,38 @@ System.register('flarum/components/DiscussionListItem', ['flarum/Component', 'fl
           key: 'infoItems',
           value: function infoItems() {
             var items = new ItemList();
+            var discussion = this.props.discussion;
+            var isUnread = discussion.isUnread();
+            var showUnread = !this.showRepliesCount() && isUnread;
+            var startPost = discussion.startPost();
 
             items.add('terminalPost', TerminalPost.component({
               discussion: this.props.discussion,
               lastPost: !this.showStartPost()
-            }));
+            }), 100);
+
+            if (startPost) {
+              var excerpt = m(
+                'span',
+                null,
+                truncate(startPost.contentPlain(), 200)
+              );
+              var imgs = $(startPost.contentHtml()).find('img');
+
+              if (imgs.length) {
+                items.add('cover', m.trust(imgs[0]), 90);
+              }
+
+              items.add('excerpt', excerpt, 50);
+            }
+
+            items.add('count', m(
+              'span',
+              { className: 'DiscussionListItem-count',
+                onclick: this.markAsRead.bind(this),
+                title: showUnread ? app.translator.trans('core.forum.discussion_list.mark_as_read_tooltip') : '' },
+              abbreviateNumber(discussion[showUnread ? 'unreadCount' : 'repliesCount']())
+            ), 30);
 
             return items;
           }

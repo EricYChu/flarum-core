@@ -184,6 +184,7 @@ class WebAppView
         $this->app = $app;
 
         $this->addHeadString('<link rel="stylesheet" href="//static.acgn.io/fonts/open-sans.css">', 'font');
+//        $this->addHeadString('<script src="https://www.'.(strtolower($locale) == 'zh-cn' ? 'recaptcha.net' : 'google.com').'/recaptcha/api.js?hl='.$locale.'&render=explicit" async defer></script>', 'recaptcha');
 
         $this->js = $this->assets->getJs();
         $this->css = $this->assets->getCss();
@@ -303,7 +304,8 @@ class WebAppView
         $view->cssUrls = $this->buildCssUrls($baseUrl);
 
         $locale = $this->locales->getLocale();
-        $recaptchaUrl = 'https://www.'.(strtolower($locale) == 'zh-cn' ? 'recaptcha.net' : 'google.com').'/recaptcha/api.js?hl='.$locale.'&render=explicit';
+//        $recaptchaUrl = 'https://www.'.(strtolower($locale) == 'zh-cn' ? 'recaptcha.net' : 'google.com').'/recaptcha/api.js?hl='.$locale.'&render=explicit';
+        $recaptchaUrl = 'https://www.google.com/recaptcha/api.js?hl='.$locale.'&render=explicit';
         $view->jsUrls = array_merge([$recaptchaUrl], $this->buildJsUrls($baseUrl));
 
         $view->head = $this->buildHeadContent();
