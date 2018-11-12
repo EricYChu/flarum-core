@@ -22164,7 +22164,7 @@ System.register('flarum/components/DiscussionListItem', ['flarum/Component', 'fl
               var imgs = $(startPost.contentHtml()).find('img');
 
               if (imgs.length) {
-                items.add('cover', m.trust(imgs[0]), 90);
+                items.add('cover', m.trust(imgs[0].outerHTML), 90);
               }
 
               items.add('excerpt', excerpt, 50);
