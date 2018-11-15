@@ -19,8 +19,6 @@ export default class BasicsPage extends Page {
       'default_locale',
       'show_language_selector',
       'default_route',
-      'google_recaptcha_site_key',
-      'google_recaptcha_secret_key',
       'welcome_title',
       'welcome_message'
     ];
@@ -91,26 +89,6 @@ export default class BasicsPage extends Page {
                     {label}
                   </label>
                 )
-              ]
-            })}
-
-            {FieldSet.component({
-              label: app.translator.trans('core.admin.basics.google_recaptcha_heading'),
-              className: 'BasicsPage-googleRecaptcha',
-              children: [
-                <div className="helpText">
-                  {app.translator.trans('core.admin.basics.welcome_banner_text')}
-                </div>,
-                <div className="BasicsPage-googleRecaptcha-input">
-                  <input className="FormControl"
-                         placeholder={app.translator.trans('core.admin.basics.google_recaptcha_site_key_placeholder')}
-                         value={this.values.google_recaptcha_site_key()}
-                         oninput={m.withAttr('value', this.values.google_recaptcha_site_key)}/>
-                  <input className="FormControl"
-                         placeholder={app.translator.trans('core.admin.basics.google_recaptcha_secret_key_placeholder')}
-                         value={this.values.google_recaptcha_secret_key()}
-                         oninput={m.withAttr('value', this.values.google_recaptcha_secret_key)}/>
-                </div>
               ]
             })}
 

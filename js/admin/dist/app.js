@@ -17568,13 +17568,6 @@ System.register('flarum/components/AdminNav', ['flarum/Component', 'flarum/compo
               description: app.translator.trans('core.admin.nav.email_text')
             }));
 
-            items.add('sms', AdminLinkButton.component({
-              href: app.route('sms'),
-              icon: 'comments',
-              children: app.translator.trans('core.admin.nav.sms_button'),
-              description: app.translator.trans('core.admin.nav.sms_text')
-            }));
-
             items.add('permissions', AdminLinkButton.component({
               href: app.route('permissions'),
               icon: 'key',
@@ -18062,7 +18055,7 @@ System.register('flarum/components/BasicsPage', ['flarum/components/Page', 'flar
 
             this.loading = false;
 
-            this.fields = ['forum_title', 'forum_description', 'default_locale', 'show_language_selector', 'default_route', 'google_recaptcha_site_key', 'google_recaptcha_secret_key', 'welcome_title', 'welcome_message'];
+            this.fields = ['forum_title', 'forum_description', 'default_locale', 'show_language_selector', 'default_route', 'welcome_title', 'welcome_message'];
             this.values = {};
 
             var settings = app.data.settings;
@@ -18133,26 +18126,6 @@ System.register('flarum/components/BasicsPage', ['flarum/components/Page', 'flar
                         label
                       );
                     })]
-                  }),
-                  FieldSet.component({
-                    label: app.translator.trans('core.admin.basics.google_recaptcha_heading'),
-                    className: 'BasicsPage-googleRecaptcha',
-                    children: [m(
-                      'div',
-                      { className: 'helpText' },
-                      app.translator.trans('core.admin.basics.welcome_banner_text')
-                    ), m(
-                      'div',
-                      { className: 'BasicsPage-googleRecaptcha-input' },
-                      m('input', { className: 'FormControl',
-                        placeholder: app.translator.trans('core.admin.basics.google_recaptcha_site_key_placeholder'),
-                        value: this.values.google_recaptcha_site_key(),
-                        oninput: m.withAttr('value', this.values.google_recaptcha_site_key) }),
-                      m('input', { className: 'FormControl',
-                        placeholder: app.translator.trans('core.admin.basics.google_recaptcha_secret_key_placeholder'),
-                        value: this.values.google_recaptcha_secret_key(),
-                        oninput: m.withAttr('value', this.values.google_recaptcha_secret_key) })
-                    )]
                   }),
                   FieldSet.component({
                     label: app.translator.trans('core.admin.basics.welcome_banner_heading'),
@@ -21084,224 +21057,6 @@ System.register('flarum/components/SettingsModal', ['flarum/components/Modal', '
 });;
 'use strict';
 
-System.register('flarum/components/SMSPage', ['flarum/components/Page', 'flarum/components/FieldSet', 'flarum/components/Button', 'flarum/components/Alert', 'flarum/utils/saveSettings'], function (_export, _context) {
-  "use strict";
-
-  var Page, FieldSet, Button, Alert, saveSettings, SMSPage;
-  return {
-    setters: [function (_flarumComponentsPage) {
-      Page = _flarumComponentsPage.default;
-    }, function (_flarumComponentsFieldSet) {
-      FieldSet = _flarumComponentsFieldSet.default;
-    }, function (_flarumComponentsButton) {
-      Button = _flarumComponentsButton.default;
-    }, function (_flarumComponentsAlert) {
-      Alert = _flarumComponentsAlert.default;
-    }, function (_flarumUtilsSaveSettings) {
-      saveSettings = _flarumUtilsSaveSettings.default;
-    }],
-    execute: function () {
-      SMSPage = function (_Page) {
-        babelHelpers.inherits(SMSPage, _Page);
-
-        function SMSPage() {
-          babelHelpers.classCallCheck(this, SMSPage);
-          return babelHelpers.possibleConstructorReturn(this, (SMSPage.__proto__ || Object.getPrototypeOf(SMSPage)).apply(this, arguments));
-        }
-
-        babelHelpers.createClass(SMSPage, [{
-          key: 'init',
-          value: function init() {
-            var _this2 = this;
-
-            babelHelpers.get(SMSPage.prototype.__proto__ || Object.getPrototypeOf(SMSPage.prototype), 'init', this).call(this);
-
-            this.loading = false;
-
-            this.fields = ['sms_driver', 'sms_sender_name', 'sms_twilio_verification_api_key', 'sms_paasoo_api_key', 'sms_paasoo_api_secret', 'sms_paasoo_sender_number', 'sms_paasoo_cn_message_template'];
-            this.values = {};
-
-            var settings = app.data.settings;
-            this.fields.forEach(function (key) {
-              return _this2.values[key] = m.prop(settings[key]);
-            });
-
-            this.localeOptions = {};
-            var locales = app.locales;
-            for (var i in locales) {
-              this.localeOptions[i] = locales[i] + ' (' + i + ')';
-            }
-          }
-        }, {
-          key: 'view',
-          value: function view() {
-            return m(
-              'div',
-              { className: 'SMSPage' },
-              m(
-                'div',
-                { className: 'container' },
-                m(
-                  'form',
-                  { onsubmit: this.onsubmit.bind(this) },
-                  m(
-                    'h2',
-                    null,
-                    app.translator.trans('core.admin.sms.heading')
-                  ),
-                  m(
-                    'div',
-                    { className: 'helpText' },
-                    app.translator.trans('core.admin.sms.text')
-                  ),
-                  FieldSet.component({
-                    label: app.translator.trans('core.admin.sms.driver_label'),
-                    className: 'SMSPage-SMSSettings',
-                    children: [m(
-                      'div',
-                      { className: 'SMSPage-SMSSettings-input' },
-                      m(
-                        'select',
-                        { className: 'FormControl', value: this.values.sms_driver() || '',
-                          onchange: m.withAttr('value', this.values.sms_driver) },
-                        m(
-                          'option',
-                          { value: 'PaaSoo' },
-                          'PaaSoo'
-                        ),
-                        m(
-                          'option',
-                          { value: 'Twilio' },
-                          'Twilio'
-                        )
-                      )
-                    )]
-                  }),
-                  FieldSet.component({
-                    label: app.translator.trans('core.admin.sms.sender_name_label'),
-                    className: 'SMSPage-SMSSettings',
-                    children: [m(
-                      'div',
-                      { className: 'SMSPage-SMSSettings-input' },
-                      m('input', { className: 'FormControl', value: this.values.sms_sender_name() || '',
-                        oninput: m.withAttr('value', this.values.sms_sender_name) })
-                    )]
-                  }),
-                  FieldSet.component({
-                    label: app.translator.trans('core.admin.sms.twilio_heading'),
-                    className: 'SMSPage-SMSSettings',
-                    children: [m(
-                      'div',
-                      { className: 'SMSPage-SMSSettings-input' },
-                      m(
-                        'label',
-                        null,
-                        app.translator.trans('core.admin.sms.twilio_verification_api_key_label')
-                      ),
-                      m('input', { className: 'FormControl', value: this.values.sms_twilio_verification_api_key() || '',
-                        oninput: m.withAttr('value', this.values.sms_twilio_verification_api_key) })
-                    )]
-                  }),
-                  FieldSet.component({
-                    label: app.translator.trans('core.admin.sms.paasoo_heading'),
-                    className: 'SMSPage-SMSSettings',
-                    children: [m(
-                      'div',
-                      { className: 'SMSPage-SMSSettings-input' },
-                      m(
-                        'label',
-                        null,
-                        app.translator.trans('core.admin.sms.paasoo_api_key_label')
-                      ),
-                      m('input', { className: 'FormControl', value: this.values.sms_paasoo_api_key() || '',
-                        oninput: m.withAttr('value', this.values.sms_paasoo_api_key) })
-                    ), m(
-                      'div',
-                      { className: 'SMSPage-SMSSettings-input' },
-                      m(
-                        'label',
-                        null,
-                        app.translator.trans('core.admin.sms.paasoo_api_secret_label')
-                      ),
-                      m('input', { className: 'FormControl', value: this.values.sms_paasoo_api_secret() || '',
-                        oninput: m.withAttr('value', this.values.sms_paasoo_api_secret) })
-                    ), m(
-                      'div',
-                      { className: 'SMSPage-SMSSettings-input' },
-                      m(
-                        'label',
-                        null,
-                        app.translator.trans('core.admin.sms.paasoo_sender_number_label')
-                      ),
-                      m('input', { className: 'FormControl', value: this.values.sms_paasoo_sender_number() || '',
-                        oninput: m.withAttr('value', this.values.sms_paasoo_sender_number) })
-                    ), m(
-                      'div',
-                      { className: 'SMSPage-SMSSettings-input' },
-                      m(
-                        'label',
-                        null,
-                        app.translator.trans('core.admin.sms.paasoo_cn_message_template_label')
-                      ),
-                      m('input', { className: 'FormControl', value: this.values.sms_paasoo_cn_message_template() || '',
-                        oninput: m.withAttr('value', this.values.sms_paasoo_cn_message_template) })
-                    )]
-                  }),
-                  Button.component({
-                    type: 'submit',
-                    className: 'Button Button--primary',
-                    children: app.translator.trans('core.admin.sms.submit_button'),
-                    loading: this.loading,
-                    disabled: !this.changed()
-                  })
-                )
-              )
-            );
-          }
-        }, {
-          key: 'changed',
-          value: function changed() {
-            var _this3 = this;
-
-            return this.fields.some(function (key) {
-              return _this3.values[key]() !== app.data.settings[key];
-            });
-          }
-        }, {
-          key: 'onsubmit',
-          value: function onsubmit(e) {
-            var _this4 = this;
-
-            e.preventDefault();
-
-            if (this.loading) return;
-
-            this.loading = true;
-            app.alerts.dismiss(this.successAlert);
-
-            var settings = {};
-
-            this.fields.forEach(function (key) {
-              return settings[key] = _this4.values[key]();
-            });
-
-            saveSettings(settings).then(function () {
-              app.alerts.show(_this4.successAlert = new Alert({ type: 'success', children: app.translator.trans('core.admin.basics.saved_message') }));
-            }).catch(function () {}).then(function () {
-              _this4.loading = false;
-              m.redraw();
-            });
-          }
-        }]);
-        return SMSPage;
-      }(Page);
-
-      _export('default', SMSPage);
-    }
-  };
-});;
-'use strict';
-
 System.register('flarum/components/SplitDropdown', ['flarum/components/Dropdown', 'flarum/components/Button', 'flarum/helpers/icon'], function (_export, _context) {
   "use strict";
 
@@ -22062,10 +21817,10 @@ System.register('flarum/initializers/preload', ['flarum/Session'], function (_ex
 });;
 'use strict';
 
-System.register('flarum/initializers/routes', ['flarum/components/DashboardPage', 'flarum/components/BasicsPage', 'flarum/components/PermissionsPage', 'flarum/components/AppearancePage', 'flarum/components/ExtensionsPage', 'flarum/components/MailPage', 'flarum/components/SMSPage'], function (_export, _context) {
+System.register('flarum/initializers/routes', ['flarum/components/DashboardPage', 'flarum/components/BasicsPage', 'flarum/components/PermissionsPage', 'flarum/components/AppearancePage', 'flarum/components/ExtensionsPage', 'flarum/components/MailPage'], function (_export, _context) {
   "use strict";
 
-  var DashboardPage, BasicsPage, PermissionsPage, AppearancePage, ExtensionsPage, MailPage, SMSPage;
+  var DashboardPage, BasicsPage, PermissionsPage, AppearancePage, ExtensionsPage, MailPage;
 
   _export('default', function (app) {
     app.routes = {
@@ -22074,8 +21829,7 @@ System.register('flarum/initializers/routes', ['flarum/components/DashboardPage'
       'permissions': { path: '/permissions', component: PermissionsPage.component() },
       'appearance': { path: '/appearance', component: AppearancePage.component() },
       'extensions': { path: '/extensions', component: ExtensionsPage.component() },
-      'mail': { path: '/mail', component: MailPage.component() },
-      'sms': { path: '/sms', component: SMSPage.component() }
+      'mail': { path: '/mail', component: MailPage.component() }
     };
   });
 
@@ -22092,8 +21846,6 @@ System.register('flarum/initializers/routes', ['flarum/components/DashboardPage'
       ExtensionsPage = _flarumComponentsExtensionsPage.default;
     }, function (_flarumComponentsMailPage) {
       MailPage = _flarumComponentsMailPage.default;
-    }, function (_flarumComponentsSMSPage) {
-      SMSPage = _flarumComponentsSMSPage.default;
     }],
     execute: function () {}
   };
@@ -22717,6 +22469,8 @@ System.register('flarum/models/User', ['flarum/Model', 'flarum/utils/stringToCol
         username: Model.attribute('username'),
         email: Model.attribute('email'),
         phone: Model.attribute('phone'),
+        countryCode: Model.attribute('countryCode'),
+        phoneNumber: Model.attribute('phoneNumber'),
         isActivated: Model.attribute('isActivated'),
         password: Model.attribute('password'),
 
