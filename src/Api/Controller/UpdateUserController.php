@@ -11,6 +11,8 @@
 
 namespace Flarum\Api\Controller;
 
+use Flarum\Api\Serializer\CurrentUserSerializer;
+use Flarum\Api\Serializer\UserSerializer;
 use Flarum\Core\Command\EditUser;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Psr\Http\Message\ServerRequestInterface;
@@ -24,7 +26,7 @@ class UpdateUserController extends AbstractResourceController
     /**
      * {@inheritdoc}
      */
-    public $serializer = 'Flarum\Api\Serializer\CurrentUserSerializer';
+    public $serializer = UserSerializer::class;
 
     /**
      * {@inheritdoc}
@@ -53,6 +55,9 @@ class UpdateUserController extends AbstractResourceController
 
     /**
      * @param Dispatcher $bus
+     * @param Factory $validatorFactory
+     * @param SettingsRepositoryInterface $settings
+     * @param TranslatorInterface $translator
      */
     public function __construct(Dispatcher $bus, Factory $validatorFactory, SettingsRepositoryInterface $settings, TranslatorInterface $translator)
     {
@@ -63,13 +68,19 @@ class UpdateUserController extends AbstractResourceController
     }
 
     /**
-     * {@inheritdoc}
+     * @param ServerRequestInterface $request
+     * @param Document $document
+     * @return mixed
      */
     protected function data(ServerRequestInterface $request, Document $document)
     {
         $id = array_get($request->getQueryParams(), 'id');
         $actor = $request->getAttribute('actor');
         $data = array_get($request->getParsedBody(), 'data', []);
+
+        if ($actor->id == $id) {
+            $this->serializer = CurrentUserSerializer::class;
+        }
 
         return $this->bus->dispatch(
             new EditUser($id, $actor, $data)
