@@ -12,6 +12,8 @@
 namespace Flarum\Forum\Controller;
 
 use Flarum\Core\Access\AssertPermissionTrait;
+use Flarum\Core\CenterService\CenterService;
+use Flarum\Core\User;
 use Flarum\Event\UserLoggedOut;
 use Flarum\Foundation\Application;
 use Flarum\Http\Controller\ControllerInterface;
@@ -47,17 +49,23 @@ class LogOutController implements ControllerInterface
     protected $rememberer;
 
     /**
+     * @var CenterService
+     */
+    protected $center;
+
+    /**
      * @param Application $app
      * @param Dispatcher $events
      * @param SessionAuthenticator $authenticator
      * @param Rememberer $rememberer
      */
-    public function __construct(Application $app, Dispatcher $events, SessionAuthenticator $authenticator, Rememberer $rememberer)
+    public function __construct(Application $app, Dispatcher $events, SessionAuthenticator $authenticator, Rememberer $rememberer, CenterService $center)
     {
         $this->app = $app;
         $this->events = $events;
         $this->authenticator = $authenticator;
         $this->rememberer = $rememberer;
+        $this->center = $center;
     }
 
     /**
@@ -73,7 +81,10 @@ class LogOutController implements ControllerInterface
             throw new TokenMismatchException;
         }
 
+        /** @var User $actor */
         $actor = $request->getAttribute('actor');
+
+        $token = $actor->getToken()->center_token;
 
         $this->assertRegistered($actor);
 
@@ -86,6 +97,8 @@ class LogOutController implements ControllerInterface
         $actor->accessTokens()->delete();
 
         $this->events->fire(new UserLoggedOut($actor));
+
+        $this->center->signOut($token);
 
         return $this->rememberer->forget($response);
     }
