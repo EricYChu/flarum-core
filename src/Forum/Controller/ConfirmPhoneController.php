@@ -14,7 +14,6 @@ namespace Flarum\Forum\Controller;
 use Flarum\Api\Client;
 use Flarum\Http\Controller\ControllerInterface;
 use Flarum\Http\SessionAuthenticator;
-use Illuminate\Contracts\Validation\UnauthorizedException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Zend\Diactoros\Response\EmptyResponse;
 

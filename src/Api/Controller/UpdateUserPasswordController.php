@@ -14,7 +14,8 @@ namespace Flarum\Api\Controller;
 use Flarum\Core\CenterService\CenterService;
 use Flarum\Core\Exception\PermissionDeniedException;
 use Flarum\Core\User;
-use Illuminate\Contracts\Bus\Dispatcher;
+use Flarum\Event\UserPasswordWasChanged;
+use Illuminate\Contracts\Bus\Dispatcher as Bus;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -32,7 +33,7 @@ class UpdateUserPasswordController extends AbstractResourceController
     public $include = ['groups'];
 
     /**
-     * @var Dispatcher
+     * @var Bus
      */
     protected $bus;
 
@@ -47,11 +48,11 @@ class UpdateUserPasswordController extends AbstractResourceController
     protected $center;
 
     /**
-     * @param Dispatcher $bus
+     * @param Bus $bus
      * @param TranslatorInterface $translator
      * @param CenterService $center
      */
-    public function __construct(Dispatcher $bus, TranslatorInterface $translator, CenterService $center)
+    public function __construct(Bus $bus, TranslatorInterface $translator, CenterService $center)
     {
         $this->bus = $bus;
         $this->translator = $translator;
@@ -59,7 +60,13 @@ class UpdateUserPasswordController extends AbstractResourceController
     }
 
     /**
-     * {@inheritdoc}
+     * @param ServerRequestInterface $request
+     * @param Document $document
+     * @return User|mixed
+     * @throws PermissionDeniedException
+     * @throws \Acgn\Center\Exceptions\HttpTransferException
+     * @throws \Acgn\Center\Exceptions\ParseResponseException
+     * @throws \Acgn\Center\Exceptions\ResponseException
      */
     protected function data(ServerRequestInterface $request, Document $document)
     {
@@ -77,6 +84,8 @@ class UpdateUserPasswordController extends AbstractResourceController
         $currentPassword = array_get($data, 'meta.password');
 
         $this->center->updateUserPassword($token, $actor->id, (string)$password, (string)$currentPassword);
+
+        static::$events->fire(new UserPasswordWasChanged($actor));
 
         return $actor;
     }

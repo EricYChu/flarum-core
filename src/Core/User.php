@@ -16,17 +16,11 @@ use Flarum\Core\Access\Gate;
 use Flarum\Core\Support\EventGeneratorTrait;
 use Flarum\Core\Support\ScopeVisibilityTrait;
 use Flarum\Database\AbstractModel;
-use Flarum\Event\CheckUserPassword;
 use Flarum\Event\ConfigureUserPreferences;
 use Flarum\Event\PostWasDeleted;
 use Flarum\Event\PrepareUserGroups;
 use Flarum\Event\UserAvatarWasChanged;
 use Flarum\Event\UserBioWasChanged;
-use Flarum\Event\UserEmailChangeWasRequested;
-use Flarum\Event\UserEmailWasChanged;
-use Flarum\Event\UserPasswordWasChanged;
-use Flarum\Event\UserPhoneChangeWasRequested;
-use Flarum\Event\UserPhoneWasChanged;
 use Flarum\Event\UserWasActivated;
 use Flarum\Event\UserWasDeleted;
 use Flarum\Event\UserWasRegistered;
@@ -227,95 +221,6 @@ class User extends AbstractModel
     }
 
     /**
-     * Change the user's phone.
-     *
-     * @param string $phone
-     * @return $this
-     */
-    public function changePhone($phone)
-    {
-        if ($phone !== $this->phone) {
-            $this->phone = $phone;
-
-            $this->raise(new UserPhoneWasChanged($this));
-        }
-
-        return $this;
-    }
-
-    /**
-     * Request that the user's phone be changed.
-     *
-     * @param string $phone
-     * @return $this
-     */
-    public function requestPhoneChange($phone)
-    {
-        if ($phone !== $this->phone) {
-            $this->raise(new UserPhoneChangeWasRequested($this, $phone));
-        }
-
-        return $this;
-    }
-
-    /**
-     * Change the user's email.
-     *
-     * @param string $email
-     * @return $this
-     */
-    public function changeEmail($email)
-    {
-        if ($email !== $this->email) {
-            $this->email = $email;
-
-            $this->raise(new UserEmailWasChanged($this));
-        }
-
-        return $this;
-    }
-
-    /**
-     * Request that the user's email be changed.
-     *
-     * @param string $email
-     * @return $this
-     */
-    public function requestEmailChange($email)
-    {
-        if ($email !== $this->email) {
-            $this->raise(new UserEmailChangeWasRequested($this, $email));
-        }
-
-        return $this;
-    }
-
-    /**
-     * Change the user's password.
-     *
-     * @param string $password
-     * @return $this
-     */
-    public function changePassword($password)
-    {
-        $this->password = $password;
-
-        $this->raise(new UserPasswordWasChanged($this));
-
-        return $this;
-    }
-
-    /**
-     * Set the password attribute, storing it as a hash.
-     *
-     * @param string $value
-     */
-    public function setPasswordAttribute($value)
-    {
-        $this->attributes['password'] = $value ? static::$hasher->make($value) : '';
-    }
-
-    /**
      * Change the user's bio.
      *
      * @param string $bio
@@ -392,23 +297,6 @@ class User extends AbstractModel
     public function getLocaleAttribute($value)
     {
         return $value ?: Application::config('locale', 'en');
-    }
-
-    /**
-     * Check if a given password matches the user's password.
-     *
-     * @param string $password
-     * @return bool
-     */
-    public function checkPassword($password)
-    {
-        $valid = static::$dispatcher->until(new CheckUserPassword($this, $password));
-
-        if ($valid !== null) {
-            return $valid;
-        }
-
-        return static::$hasher->check($password, $this->password);
     }
 
     /**

@@ -12,8 +12,6 @@
 namespace Flarum\Http;
 
 use Flarum\Core\AuthToken;
-use Flarum\Core\EmailToken;
-use Flarum\Core\PasswordToken;
 use Flarum\Foundation\AbstractServer as BaseAbstractServer;
 use Flarum\Foundation\Application;
 use Psr\Http\Message\ResponseInterface;
@@ -68,8 +66,6 @@ abstract class AbstractServer extends BaseAbstractServer
 
             $earliestToKeep = date('Y-m-d H:i:s', time() - 24 * 60 * 60);
 
-            EmailToken::where('created_at', '<=', $earliestToKeep)->delete();
-            PasswordToken::where('created_at', '<=', $earliestToKeep)->delete();
             AuthToken::where('created_at', '<=', $earliestToKeep)->delete();
         }
     }

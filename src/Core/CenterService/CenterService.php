@@ -224,6 +224,28 @@ class CenterService
     }
 
     /**
+     * @param string $token
+     * @param int $id
+     * @param string $password
+     * @param string $currentPassword
+     * @return null
+     * @throws \Acgn\Center\Exceptions\HttpTransferException
+     * @throws \Acgn\Center\Exceptions\ParseResponseException
+     * @throws \Acgn\Center\Exceptions\ResponseException
+     */
+    public function updateUserPassword(string $token, int $id, string $password, string $currentPassword)
+    {
+        try {
+            $res = $this->setAccessToken($token)
+                ->resources()->users($id)->password()->update($password, $currentPassword);
+        } catch (InvalidParamsResponseException $e) {
+            throw $this->handleInvalidParamsResponseException($e);
+        }
+
+        return $res;
+    }
+
+    /**
      * @param string $verificationToken
      * @param string $password
      * @return null

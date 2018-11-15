@@ -15,7 +15,8 @@ use Flarum\Core\CenterService\CenterService;
 use Flarum\Core\Command\UpdateUser;
 use Flarum\Core\Exception\PermissionDeniedException;
 use Flarum\Core\User;
-use Illuminate\Contracts\Bus\Dispatcher;
+use Flarum\Event\UserPhoneWasChanged;
+use Illuminate\Contracts\Bus\Dispatcher as Bus;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 use Symfony\Component\Translation\TranslatorInterface;
@@ -33,7 +34,7 @@ class UpdateUserPhoneController extends AbstractResourceController
     public $include = ['groups'];
 
     /**
-     * @var Dispatcher
+     * @var Bus
      */
     protected $bus;
 
@@ -48,11 +49,11 @@ class UpdateUserPhoneController extends AbstractResourceController
     protected $center;
 
     /**
-     * @param Dispatcher $bus
+     * @param Bus $bus
      * @param TranslatorInterface $translator
      * @param CenterService $center
      */
-    public function __construct(Dispatcher $bus, TranslatorInterface $translator, CenterService $center)
+    public function __construct(Bus $bus, TranslatorInterface $translator, CenterService $center)
     {
         $this->bus = $bus;
         $this->translator = $translator;
@@ -60,7 +61,13 @@ class UpdateUserPhoneController extends AbstractResourceController
     }
 
     /**
-     * {@inheritdoc}
+     * @param ServerRequestInterface $request
+     * @param Document $document
+     * @return mixed
+     * @throws PermissionDeniedException
+     * @throws \Acgn\Center\Exceptions\HttpTransferException
+     * @throws \Acgn\Center\Exceptions\ParseResponseException
+     * @throws \Acgn\Center\Exceptions\ResponseException
      */
     protected function data(ServerRequestInterface $request, Document $document)
     {
@@ -78,8 +85,12 @@ class UpdateUserPhoneController extends AbstractResourceController
 
         $centerUser = $this->center->updateUserPhone($token, $actor->id, (string)$verificationToken);
 
-        return $this->bus->dispatch(
+        $user = $this->bus->dispatch(
             new UpdateUser($actor, $centerUser)
-        );;
+        );
+
+        static::$events->fire(new UserPhoneWasChanged($actor));
+
+        return $user;
     }
 }

@@ -116,13 +116,6 @@ class ApiServiceProvider extends AbstractServiceProvider
             $route->toController(Controller\TokenController::class)
         );
 
-        // Send forgot password verification code
-        $routes->post(
-            '/forgot',
-            'forgot',
-            $route->toController(Controller\ForgotPasswordController::class)
-        );
-
         $routes->post(
             '/verifications',
             'startVerification',
@@ -200,13 +193,6 @@ class ApiServiceProvider extends AbstractServiceProvider
             '/users/{id}/avatar',
             'users.avatar.delete',
             $route->toController(Controller\DeleteAvatarController::class)
-        );
-
-        // send confirmation email
-        $routes->post(
-            '/users/{id}/send-confirmation',
-            'users.confirmation.send',
-            $route->toController(Controller\SendConfirmationEmailController::class)
         );
 
         /*

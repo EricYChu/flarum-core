@@ -112,18 +112,6 @@ class ForumServiceProvider extends AbstractServiceProvider
             $route->toController(Controller\ConfirmPhoneController::class)
         );
 
-//        $routes->get(
-//            '/confirm/email/{token}',
-//            'confirmEmail',
-//            $route->toController(Controller\ConfirmEmailController::class)
-//        );
-
-//        $routes->get(
-//            '/reset/{token}',
-//            'resetPassword',
-//            $route->toController(Controller\ResetPasswordController::class)
-//        );
-
         $routes->post(
             '/reset',
             'resetPassword',
