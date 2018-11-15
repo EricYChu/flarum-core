@@ -12,6 +12,7 @@
 namespace Flarum\Core\Command;
 
 use Flarum\Core\Access\AssertPermissionTrait;
+use Flarum\Core\CenterService\CenterService;
 use Flarum\Core\Repository\UserRepository;
 use Flarum\Core\Support\DispatchEventsTrait;
 use Flarum\Core\User;
@@ -19,6 +20,7 @@ use Flarum\Core\Validator\UserValidator;
 use Flarum\Event\UserGroupsWereChanged;
 use Flarum\Event\UserWillBeSaved;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Bus\Dispatcher as Bus;
 
 class EditUserHandler
 {
@@ -36,20 +38,36 @@ class EditUserHandler
     protected $validator;
 
     /**
+     * @var CenterService
+     */
+    protected $center;
+
+    /**
+     * @var Bus
+     */
+    protected $bus;
+
+    /**
      * @param Dispatcher $events
      * @param UserRepository $users
      * @param UserValidator $validator
+     * @param CenterService $center
      */
-    public function __construct(Dispatcher $events, UserRepository $users, UserValidator $validator)
+    public function __construct(Dispatcher $events, UserRepository $users, UserValidator $validator, CenterService $center, Bus $bus)
     {
         $this->events = $events;
         $this->users = $users;
         $this->validator = $validator;
+        $this->center = $center;
+        $this->bus = $bus;
     }
 
     /**
      * @param EditUser $command
-     * @return User
+     * @return User|mixed
+     * @throws \Acgn\Center\Exceptions\HttpTransferException
+     * @throws \Acgn\Center\Exceptions\ParseResponseException
+     * @throws \Acgn\Center\Exceptions\ResponseException
      * @throws \Flarum\Core\Exception\PermissionDeniedException
      */
     public function handle(EditUser $command)
@@ -66,51 +84,30 @@ class EditUserHandler
         $relationships = array_get($data, 'relationships', []);
         $validate = [];
 
-        if (isset($attributes['username'])) {
-            $this->assertPermission($canEdit);
-            $user->rename($attributes['username']);
-        }
+        if ($isSelf) {
+            if (isset($attributes['username']) or isset($attributes['email'])) {
+                $username = null;
+                $email = null;
 
-        if (isset($attributes['email']) and $attributes['email'] !== $user->email) {
-            if ($isSelf) {
-                $user->requestEmailChange($attributes['email']);
-            } else {
-                $this->assertPermission($canEdit);
-                $user->changeEmail($attributes['email']);
-            }
-            $validate['email'] = $attributes['email'];
-        }
+                if (isset($attributes['username'])) {
+                    $username = $attributes['username'];
+                }
 
-        if (isset($attributes['phone']) and $attributes['phone'] !== $user->phone) {
-            if ($isSelf) {
-                $user->requestPhoneChange($attributes['phone']);
-            } else {
-                $this->assertPermission($canEdit);
-                $user->changePhone($attributes['phone']);
+                if (isset($attributes['email']) and $attributes['email'] !== $user->email) {
+                    $email = $attributes['email'];
+                }
+
+                $centerUser = $this->center->updateUser($actor->getToken()->center_token, $actor->id, $username, $email);
+
+                $user = $this->bus->dispatch(
+                    new UpdateUser($actor, $centerUser)
+                );
             }
-            $validate['phone'] = $attributes['phone'];
         }
 
         if ($actor->isAdmin() and ! empty($attributes['isActivated'])) {
             $user->activate();
         }
-
-        if (isset($attributes['password'])) {
-            if ($isSelf) {
-                $user->changePassword($attributes['password']);
-            } else {
-                $this->assertPermission($canEdit);
-                $user->changePassword($attributes['password']);
-            }
-            $validate['password'] = $attributes['password'];
-        }
-
-//        if (isset($attributes['password'])) {
-//            $this->assertPermission($canEdit);
-//            $user->changePassword($attributes['password']);
-//
-//            $validate['password'] = $attributes['password'];
-//        }
 
         if (isset($attributes['bio'])) {
             if (! $isSelf) {

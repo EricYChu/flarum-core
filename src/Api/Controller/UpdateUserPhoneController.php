@@ -11,15 +11,16 @@
 
 namespace Flarum\Api\Controller;
 
-use Flarum\Core\Command\EditUser;
+use Flarum\Core\CenterService\CenterService;
+use Flarum\Core\Command\UpdateUser;
+use Flarum\Core\Exception\PermissionDeniedException;
+use Flarum\Core\User;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
-use Flarum\Settings\SettingsRepositoryInterface;
 use Symfony\Component\Translation\TranslatorInterface;
-use Illuminate\Contracts\Validation\Factory;
 
-class UpdateUserController extends AbstractResourceController
+class UpdateUserPhoneController extends AbstractResourceController
 {
     /**
      * {@inheritdoc}
@@ -37,29 +38,25 @@ class UpdateUserController extends AbstractResourceController
     protected $bus;
 
     /**
-     * @var Factory
-     */
-    private $validatorFactory;
-
-    /**
-     * @var SettingsRepositoryInterface
-     */
-    protected $settings;
-
-    /**
      * @var TranslatorInterface
      */
     protected $translator;
 
     /**
-     * @param Dispatcher $bus
+     * @var CenterService
      */
-    public function __construct(Dispatcher $bus, Factory $validatorFactory, SettingsRepositoryInterface $settings, TranslatorInterface $translator)
+    protected $center;
+
+    /**
+     * @param Dispatcher $bus
+     * @param TranslatorInterface $translator
+     * @param CenterService $center
+     */
+    public function __construct(Dispatcher $bus, TranslatorInterface $translator, CenterService $center)
     {
         $this->bus = $bus;
-        $this->validatorFactory = $validatorFactory;
-        $this->settings = $settings;
         $this->translator = $translator;
+        $this->center = $center;
     }
 
     /**
@@ -68,11 +65,21 @@ class UpdateUserController extends AbstractResourceController
     protected function data(ServerRequestInterface $request, Document $document)
     {
         $id = array_get($request->getQueryParams(), 'id');
+        /** @var User $actor */
         $actor = $request->getAttribute('actor');
-        $data = array_get($request->getParsedBody(), 'data', []);
+        $data = $request->getParsedBody();
+
+        if ($actor->id != $id) {
+            throw new PermissionDeniedException;
+        }
+
+        $token = $actor->getToken()->center_token;
+        $verificationToken = array_get($data, 'data.attributes.verificationToken');
+
+        $centerUser = $this->center->updateUserPhone($token, $actor->id, (string)$verificationToken);
 
         return $this->bus->dispatch(
-            new EditUser($id, $actor, $data)
-        );
+            new UpdateUser($actor, $centerUser)
+        );;
     }
 }

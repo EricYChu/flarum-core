@@ -12,6 +12,8 @@ Object.assign(User.prototype, {
   username: Model.attribute('username'),
   email: Model.attribute('email'),
   phone: Model.attribute('phone'),
+  countryCode: Model.attribute('countryCode'),
+  phoneNumber: Model.attribute('phoneNumber'),
   isActivated: Model.attribute('isActivated'),
   password: Model.attribute('password'),
 

@@ -47,6 +47,7 @@ class AuthenticateWithHeader implements MiddlewareInterface
                 $token->touch();
 
                 $actor = $token->user;
+                $actor->setToken($token);
             }
 
             if (isset($actor)) {

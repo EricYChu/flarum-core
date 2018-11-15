@@ -11,17 +11,17 @@
 
 namespace Flarum\Api\Controller;
 
-use Flarum\Core\Command\CheckPhoneVerification;
+use Flarum\Core\Command\StartVerification;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 
-class CheckRegisterVerificationController extends AbstractCreateController
+class StartVerificationController extends AbstractCreateController
 {
     /**
      * {@inheritdoc}
      */
-    public $serializer = 'Flarum\Api\Serializer\CurrentUserSerializer';
+    public $serializer = 'Flarum\Api\Serializer\VerificationSerializer';
 
     /**
      * @var Dispatcher
@@ -42,7 +42,7 @@ class CheckRegisterVerificationController extends AbstractCreateController
     protected function data(ServerRequestInterface $request, Document $document)
     {
         return $this->bus->dispatch(
-            new CheckPhoneVerification($request->getAttribute('actor'), array_get($request->getParsedBody(), 'data', []))
+            new StartVerification($request->getAttribute('actor'), array_get($request->getParsedBody(), 'data', []))
         );
     }
 }

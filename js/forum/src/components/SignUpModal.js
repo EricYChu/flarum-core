@@ -4,6 +4,7 @@ import Button from 'flarum/components/Button';
 import LogInButtons from 'flarum/components/LogInButtons';
 import extractText from 'flarum/utils/extractText';
 import callingCodes from 'flarum/utils/callingCodes';
+import Alert from 'flarum/components/Alert';
 
 /**
  * The `SignUpModal` component displays a modal dialog with a singup form.
@@ -35,11 +36,39 @@ export default class SignUpModal extends Modal {
     this.phoneNumber = m.prop(this.props.phoneNumber || '');
 
     /**
+     * The id of the Google reCAPTCHA widget.
+     *
+     * @type {Function}
+     */
+    this.recaptchaId = m.prop('');
+
+    /**
+     * The value of the Google reCAPTCHA response.
+     *
+     * @type {Function}
+     */
+    this.captchaResponse = m.prop('');
+
+    /**
+     * The value of the verification id input.
+     *
+     * @type {Function}
+     */
+    this.verificationId = m.prop('');
+
+    /**
      * The value of the verification code input.
      *
      * @type {Function}
      */
-    this.verificationCode = m.prop(this.props.verificationCode || '');
+    this.verificationCode = m.prop('');
+
+    /**
+     * The value of the verification token input.
+     *
+     * @type {Function}
+     */
+    this.verificationToken = m.prop('');
 
     /**
      * The value of the username input.
@@ -56,18 +85,13 @@ export default class SignUpModal extends Modal {
     this.password = m.prop(this.props.password || '');
 
     /**
-     * The value of the Google reCAPTCHA response.
+     * The value of the email input.
      *
      * @type {Function}
      */
-    this.recaptchaResponse = m.prop();
+    this.email = m.prop(this.props.email || '');
 
-    /**
-     * The id of the Google reCAPTCHA widget.
-     *
-     * @type {Function}
-     */
-    this.recaptchaId = m.prop();
+    this.sending = false
   }
 
   className() {
@@ -106,7 +130,7 @@ export default class SignUpModal extends Modal {
           <div className="Form-group">
             <select className="FormControl" name="countryCode" value={this.countryCode()}
                     onchange={m.withAttr('value', this.countryCode)}
-                    disabled={this.loading}>
+                    disabled={this.isLoading()}>
               {(items)}
             </select>
           </div>,
@@ -114,12 +138,36 @@ export default class SignUpModal extends Modal {
             <input className="FormControl" name="phoneNumber" type="tel" placeholder={extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder'))}
                    value={this.phoneNumber()}
                    onchange={m.withAttr('value', this.phoneNumber)}
-                   disabled={this.loading} />
+                   disabled={this.isLoading()} />
+          </div>,
+          <div className="Form-group">
+            <div className="FormControlGroup">
+              <div style="width: 100%;">
+                <input className="FormControl" name="verificationCode" type="number"
+                       placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
+                       value={this.verificationCode()}
+                       onchange={m.withAttr('value', this.verificationCode)}
+                       // oninput={this.verificationCodeOnInput.bind(this)}
+                       disabled={! this.phoneNumber().length || ! this.verificationId().length || this.isLoading()}/>
+              </div>
+              <div>
+                <Button
+                  style="width: 120px;"
+                  className="Button Button--more Button--block Button-send"
+                  type="button"
+                  disabled={! this.phoneNumber().length || this.isLoading()}
+                  loading={this.sending}>
+                  {app.translator.trans('core.lib.phone_verification.send_button')}
+                </Button>
+              </div>
+            </div>
           </div>,
           <div className="Form-group">
             <Button
               className="Button Button--primary Button--block Button-next"
               type="button"
+              onclick={this.checkVerification.bind(this)}
+              disabled={! this.verificationId().length || ! this.verificationCode().length || this.isLoading()}
               loading={this.loading}>
               {app.translator.trans('core.forum.sign_up.next_button')}
             </Button>
@@ -127,14 +175,6 @@ export default class SignUpModal extends Modal {
         ] : ''}
 
         {this.step === 2 ? [
-          <div className="Form-group">
-            <p className="helpText">{app.translator.trans('core.lib.phone_verification.verification_message_sent_message', {phone: '+'+this.phone()})}</p>
-          </div>,
-          <div className="Form-group">
-            <input className="FormControl" name="verificationCode" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
-                   onchange={m.withAttr('value', this.verificationCode)}
-                   disabled={this.loading} />
-          </div>,
           <div className="Form-group">
             <input className="FormControl" name="username" type="text" placeholder={extractText(app.translator.trans('core.forum.sign_up.username_placeholder'))}
                    value={this.username()}
@@ -145,6 +185,12 @@ export default class SignUpModal extends Modal {
             <input className="FormControl" name="password" type="password" placeholder={extractText(app.translator.trans('core.forum.sign_up.password_placeholder'))}
                    value={this.password()}
                    onchange={m.withAttr('value', this.password)}
+                   disabled={this.loading} />
+          </div>,
+          <div className="Form-group">
+            <input className="FormControl" name="email" type="email" placeholder={extractText(app.translator.trans('core.forum.sign_up.email_placeholder'))}
+                   value={this.email()}
+                   onchange={m.withAttr('value', this.email)}
                    disabled={this.loading} />
           </div>,
           <div className="Form-group">
@@ -160,15 +206,24 @@ export default class SignUpModal extends Modal {
     ];
   }
 
+  verificationCodeOnInput() {
+    this.$('.Button-next').prop('disabled', ! this.verificationId().length || ! this.verificationCode().length || this.isLoading());
+  }
+
+  isLoading() {
+    return (this.sending || this.loading);
+  }
+
   config() {
-    const $el = this.$('.Button-next');
+    const $el = this.$('.Button-send');
     if ($el.length && !$el.data('g-rendred')) {
       this.recaptchaId(grecaptcha.render($el[0], {
         sitekey: app.forum.attribute('recaptchaSiteKey'),
         theme: 'light',
         callback: val => {
-          this.recaptchaResponse(val);
-          this.$('form').submit();
+          this.sending = true;
+          this.captchaResponse(val);
+          this.requestVerification();
         },
       }));
     }
@@ -202,6 +257,11 @@ export default class SignUpModal extends Modal {
     app.modal.show(new LogInModal(props));
   }
 
+  loaded() {
+    this.sending = false;
+    super.loaded();
+  }
+
   onerror(error) {
     grecaptcha.reset(this.recaptchaId());
     super.onerror(error);
@@ -223,30 +283,91 @@ export default class SignUpModal extends Modal {
 
     const data = this.submitData();
 
-    let path = '';
-    switch (this.step) {
-      case 1:
-        path = '/register/verification';
-        break;
-      case 2:
-        path = '/register';
-        break;
-    }
-
     app.request({
-      url: app.forum.attribute('baseUrl') + path,
+      url: app.forum.attribute('baseUrl') + '/register',
       method: 'POST',
       data,
       errorHandler: this.onerror.bind(this)
     }).then(
       () => {
-        if (this.step === 2) {
-          window.location.reload();
-        } else {
-          this.step++;
-          this.loaded();
-          this.$('[name=verificationCode]').select();
+        window.location.reload();
+      },
+      this.loaded.bind(this)
+    );
+  }
+
+  autoToggleSendButton() {
+    const $button = this.$('.Button-send');
+    const $label = $button.find('.Button-label');
+    const text = $label.text();
+    $button.prop('disabled', true);
+    let sec = 60;
+    $label.text(sec + ' s');
+    const t = setInterval(function () {
+      --sec;
+      try {
+        $label.text(sec + ' s');
+      } catch (e) {}
+      if (sec === 0) {
+        clearInterval(t);
+        try {
+          $label.text(text);
+          $button.prop('disabled', false);
+        } catch (e) {}
+      }
+    }, 1000);
+  }
+
+  requestVerification() {
+    this.alert = null;
+    this.sending = true;
+
+    const data = {
+      data: {
+        attributes: {
+          captchaResponse: this.captchaResponse(),
+          countryCode: this.countryCode(),
+          phoneNumber: this.phoneNumber(),
+          scene: 'create_user'
         }
+      }
+    };
+
+    app.request({
+      url: app.forum.attribute('apiUrl') + '/verifications',
+      method: 'POST',
+      data,
+      errorHandler: this.onerror.bind(this)
+    }).then(
+      response => {
+        this.verificationId(response.data.id);
+        this.autoToggleSendButton();
+        app.alerts.show(
+          new Alert({
+            type: 'success',
+            message: app.translator.trans('core.lib.phone_verification.verification_message_sent_message', {phone: '+'+this.countryCode()+' '+this.phoneNumber})
+          })
+        );
+        this.loaded();
+      },
+      this.loaded.bind(this)
+    );
+  }
+
+  checkVerification() {
+    this.alert = null;
+    this.loading = true;
+
+    app.request({
+      url: app.forum.attribute('apiUrl') + '/verifications/' + this.verificationId() + '/token?verificationCode=' + this.verificationCode(),
+      method: 'GET',
+      errorHandler: this.onerror.bind(this)
+    }).then(
+      response => {
+        this.verificationToken(response.data.attributes.token);
+        this.step = 2;
+        this.loaded();
+        this.$('[name=username]').select();
       },
       this.loaded.bind(this)
     );
@@ -268,20 +389,11 @@ export default class SignUpModal extends Modal {
    * @public
    */
   submitData() {
-    const data = {
-      phone: this.phone()
+    return {
+      verificationToken: this.verificationToken(),
+      username: this.username(),
+      password: this.password(),
+      email: this.email()
     };
-
-    if (this.step === 1) {
-      data.recaptchaResponse = this.recaptchaResponse();
-    }
-
-    if (this.step === 2) {
-      data.verificationCode = this.verificationCode();
-      data.username = this.username();
-      data.password = this.password();
-    }
-
-    return data;
   }
 }

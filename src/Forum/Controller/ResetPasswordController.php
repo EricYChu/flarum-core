@@ -42,12 +42,7 @@ class ResetPasswordController implements ControllerInterface
         $controller = 'Flarum\Api\Controller\ResetPasswordController';
         $actor = $request->getAttribute('actor');
         $body = ['data' => ['attributes' => $input]];
-        try {
-            $response = $this->api->send($controller, $actor, [], $body);
-        } catch (\Throwable $e) {
-            var_dump($e);
-            throw $e;
-        }
+        $response = $this->api->send($controller, $actor, [], $body);
 
         return $response;
     }

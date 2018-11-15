@@ -101,18 +101,6 @@ class ForumServiceProvider extends AbstractServiceProvider
         );
 
         $routes->post(
-            '/register/verification',
-            'startRegisterVerification',
-            $route->toController(Controller\StartRegisterVerificationController::class)
-        );
-
-//        $routes->post(
-//            '/register/verification/check',
-//            'checkRegisterVerification',
-//            $route->toController(Controller\CheckRegisterVerificationController::class)
-//        );
-
-        $routes->post(
             '/register',
             'register',
             $route->toController(Controller\RegisterController::class)
@@ -124,11 +112,11 @@ class ForumServiceProvider extends AbstractServiceProvider
             $route->toController(Controller\ConfirmPhoneController::class)
         );
 
-        $routes->get(
-            '/confirm/email/{token}',
-            'confirmEmail',
-            $route->toController(Controller\ConfirmEmailController::class)
-        );
+//        $routes->get(
+//            '/confirm/email/{token}',
+//            'confirmEmail',
+//            $route->toController(Controller\ConfirmEmailController::class)
+//        );
 
 //        $routes->get(
 //            '/reset/{token}',
@@ -140,6 +128,12 @@ class ForumServiceProvider extends AbstractServiceProvider
             '/reset',
             'resetPassword',
             $route->toController(Controller\ResetPasswordController::class)
+        );
+
+        $routes->post(
+            '/system/notifications',
+            'receiveNotifications',
+            $route->toController(Controller\ReceiveSystemNotificationController::class)
         );
 
         $this->app->make('events')->fire(

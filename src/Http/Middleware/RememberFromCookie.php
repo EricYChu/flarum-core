@@ -26,13 +26,15 @@ class RememberFromCookie implements MiddlewareInterface
         $id = array_get($request->getCookieParams(), 'flarum_remember');
 
         if ($id) {
-            $token = AccessToken::find($id);
+            /** @var AccessToken $token */
+            $token = AccessToken::query()->find($id);
 
             if ($token) {
                 $token->touch();
 
                 $session = $request->getAttribute('session');
                 $session->set('user_id', $token->user_id);
+                $session->set('token', $token);
             }
         }
 

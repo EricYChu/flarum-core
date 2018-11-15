@@ -15,7 +15,7 @@ export default class ChangeEmailModal extends Modal {
      *
      * @type {Boolean}
      */
-    this.success = false;
+    this.succeed = false;
 
     /**
      * The value of the email input.
@@ -23,13 +23,6 @@ export default class ChangeEmailModal extends Modal {
      * @type {function}
      */
     this.email = m.prop(app.session.user.email());
-
-    /**
-     * The value of the password input.
-     *
-     * @type {function}
-     */
-    this.password = m.prop('');
   }
 
   className() {
@@ -41,7 +34,7 @@ export default class ChangeEmailModal extends Modal {
   }
 
   content() {
-    if (this.success) {
+    if (this.succeed) {
       return (
         <div className="Modal-body">
           <div className="Form Form--centered">
@@ -67,13 +60,6 @@ export default class ChangeEmailModal extends Modal {
                    disabled={this.loading}/>
           </div>
           <div className="Form-group">
-            <input type="password" name="password" className="FormControl"
-                   placeholder={app.translator.trans('core.forum.change_email.confirm_password_placeholder')}
-                   bidi={this.password}
-                   required={true}
-                   disabled={this.loading}/>
-          </div>
-          <div className="Form-group">
             {Button.component({
               className: 'Button Button--primary Button--block',
               type: 'submit',
@@ -89,30 +75,34 @@ export default class ChangeEmailModal extends Modal {
   onsubmit(e) {
     e.preventDefault();
 
+    const oldEmail = app.session.user.email();
+    const newEmail = this.email();
+
     // If the user hasn't actually entered a different email address, we don't
     // need to do anything. Woot!
-    if (this.email() === app.session.user.email()) {
+    if (newEmail === oldEmail) {
       this.hide();
       return;
     }
 
-    const oldEmail = app.session.user.email();
-
     this.loading = true;
+    this.alert = null;
 
-    app.session.user.save({email: this.email()}, {
-      errorHandler: this.onerror.bind(this),
-      meta: {password: this.password()}
+    app.session.user.save({email: newEmail}, {
+      errorHandler: this.onerror.bind(this)
     })
-      .then(() => this.success = true)
+      .then(() => {
+        app.session.user.data.attributes.email = newEmail;
+        this.succeed = true;
+      })
       .catch(() => {})
       .then(this.loaded.bind(this));
   }
 
   onerror(error) {
-    if (error.status === 401) {
-      error.alert.props.children = app.translator.trans('core.forum.change_email.incorrect_password_message');
-    }
+    // if (error.status === 401) {
+    //   error.alert.props.children = app.translator.trans('core.forum.change_email.incorrect_password_message');
+    // }
 
     super.onerror(error);
   }

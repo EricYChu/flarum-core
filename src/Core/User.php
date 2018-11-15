@@ -32,12 +32,15 @@ use Flarum\Event\UserWasDeleted;
 use Flarum\Event\UserWasRegistered;
 use Flarum\Event\UserWasRenamed;
 use Flarum\Foundation\Application;
+use Flarum\Http\AccessToken;
 use Illuminate\Contracts\Hashing\Hasher;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * @property int $id
  * @property string $username
+ * @property string $country_code
+ * @property string $phone_number
  * @property string $phone
  * @property string $email
  * @property bool $is_activated
@@ -64,6 +67,10 @@ class User extends AbstractModel
      */
     protected $table = 'users';
 
+    public $incrementing = false;
+
+    protected $guarded = [];
+
     /**
      * {@inheritdoc}
      */
@@ -85,6 +92,11 @@ class User extends AbstractModel
      * @var SessionInterface
      */
     protected $session;
+
+    /**
+     * @var AccessToken|null
+     */
+    protected $token = null;
 
     /**
      * An array of registered user preferences. Each preference is defined with
@@ -155,19 +167,26 @@ class User extends AbstractModel
     /**
      * Register a new user.
      *
+     * @param int $id
      * @param string $username
-     * @param string $phone
-     * @param string $password
+     * @param string $countryCode
+     * @param string $phoneNumber
+     * @param string $email
+     * @param int $joinTime
      * @return static
      */
-    public static function register($username, $phone, $password)
+    public static function register($id, $username, $countryCode, $phoneNumber, $email, $joinTime)
     {
         $user = new static;
 
+        $user->id = $id;
         $user->username = $username;
-        $user->phone = $phone;
-        $user->password = $password;
-        $user->join_time = time();
+        $user->country_code = $countryCode;
+        $user->phone_number = $phoneNumber;
+        $user->phone = $countryCode.$phoneNumber;
+        $user->password = password_hash(str_random(64), PASSWORD_BCRYPT);
+        $user->email = $email;
+        $user->join_time = $joinTime;
 
         $user->raise(new UserWasRegistered($user));
 
@@ -780,5 +799,23 @@ class User extends AbstractModel
     public static function getNotificationPreferenceKey($type, $method)
     {
         return 'notify_'.$type.'_'.$method;
+    }
+
+    /**
+     * @param AccessToken|null $token
+     * @return $this
+     */
+    public function setToken(?AccessToken $token)
+    {
+        $this->token = $token;
+        return $this;
+    }
+
+    /**
+     * @return null|array
+     */
+    public function getToken(): ?AccessToken
+    {
+        return $this->token;
     }
 }

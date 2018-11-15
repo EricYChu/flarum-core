@@ -20,21 +20,14 @@ export default class ResetPasswordModal extends Modal {
      *
      * @type {Boolean}
      */
-    this.success = false;
-
-    /**
-     * The value of the phone input.
-     *
-     * @type {Function}
-     */
-    this.phone = m.prop(this.props.phone || '');
+    this.succeed = false;
 
     /**
      * The value of the verification code input.
      *
      * @type {Function}
      */
-    this.verificationCode = m.prop(this.props.verificationCode || '');
+    this.verificationToken = m.prop(this.props.prev.verificationToken);
 
     /**
      * The value of the password input.
@@ -60,7 +53,7 @@ export default class ResetPasswordModal extends Modal {
   }
 
   content() {
-    if (this.success) {
+    if (this.succeed) {
       return (
         <div className="Modal-body">
           <div className="Form Form--centered">
@@ -80,14 +73,9 @@ export default class ResetPasswordModal extends Modal {
 
     return [
       <div className="Modal-body">
-        <LogInButtons/>
 
         <div className="Form Form--centered">
-          <div className="Form-group">
-            <input className="FormControl" name="verificationCode" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
-                   onchange={m.withAttr('value', this.verificationCode)}
-                   disabled={this.loading} />
-          </div>
+          <LogInButtons/>
 
           <div className="Form-group">
             <input className="FormControl" name="password" type="password" placeholder={extractText(app.translator.trans('core.forum.reset.password_placeholder'))}
@@ -115,7 +103,7 @@ export default class ResetPasswordModal extends Modal {
   }
 
   onready() {
-    this.$('[name=verificationCode]').select();
+    this.$('[name=password]').select();
   }
 
   onsubmit(e) {
@@ -128,15 +116,13 @@ export default class ResetPasswordModal extends Modal {
         method: 'POST',
         url: app.forum.attribute('baseUrl') + '/reset',
         data: {
-          phone: this.phone(),
-          verificationCode: this.verificationCode(),
-          password: this.password(),
-          password_confirmation: this.passwordConfirmation(),
+          verificationToken: this.verificationToken(),
+          password: this.password()
         },
         errorHandler: this.onerror.bind(this)
       })
       .then(() => {
-        this.success = true;
+        this.succeed = true;
 
       })
       .catch(() => {})
@@ -144,9 +130,9 @@ export default class ResetPasswordModal extends Modal {
   }
 
   onerror(error) {
-    if (error.status === 401) {
-      error.alert.props.children = app.translator.trans('core.forum.log_in.invalid_login_message');
-    }
+    // if (error.status === 401) {
+    //   error.alert.props.children = app.translator.trans('core.forum.log_in.invalid_login_message');
+    // }
 
     super.onerror(error);
   }
@@ -156,7 +142,7 @@ export default class ResetPasswordModal extends Modal {
 
     this.loading = true;
 
-    const identification = this.phone();
+    const identification = this.props.prev.countryCode + '' + this.props.prev.phoneNumber;
     const password = this.password();
     const remember = false;
 

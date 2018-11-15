@@ -13,7 +13,7 @@ namespace Flarum\Core\Command;
 
 use Flarum\Core\User;
 
-class ConfirmPhone
+class StartVerification
 {
     /**
      * The user performing the action.
@@ -23,19 +23,19 @@ class ConfirmPhone
     public $actor;
 
     /**
-     * The phone verification token.
+     * The attributes of the new user.
      *
-     * @var string
+     * @var array
      */
-    public $verificationToken;
+    public $data;
 
     /**
      * @param User $actor The user performing the action.
-     * @param string $verificationToken The phone verification token.
+     * @param array $data The attributes of the new user.
      */
-    public function __construct(User $actor, $verificationToken)
+    public function __construct(User $actor, array $data)
     {
         $this->actor = $actor;
-        $this->verificationToken = $verificationToken;
+        $this->data = $data;
     }
 }

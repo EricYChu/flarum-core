@@ -13,17 +13,17 @@ namespace Flarum\Core\Command;
 
 use Acgn\Center\Exceptions\InvalidParamsResponseException;
 use Flarum\Core\CenterService\CenterService;
-use Flarum\Core\Support\DispatchEventsTrait;
-use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Validation\ValidationException;
-use Illuminate\Contracts\Validation\Factory;
+use Illuminate\Validation\Factory;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Validator;
-use Illuminate\Contracts\Bus\Dispatcher as Bus;
 
-class ConfirmPhoneHandler
+class CheckVerificationHandler
 {
-    use DispatchEventsTrait;
+    /**
+     * @var CenterService
+     */
+    protected $center;
 
     /**
      * @var Factory
@@ -31,40 +31,32 @@ class ConfirmPhoneHandler
     protected $validator;
 
     /**
-     * @var CenterService
-     */
-    protected $center;
-
-    /**
-     * @var Bus
-     */
-    protected $bus;
-
-    /**
-     * @param Dispatcher $events
-     * @param Factory $validator
      * @param CenterService $center
+     * @param Factory $validator
      */
-    public function __construct(Dispatcher $events, Factory $validator, CenterService $center, Bus $bus)
+    public function __construct(CenterService $center, Factory $validator)
     {
-        $this->events = $events;
-        $this->validator = $validator;
         $this->center = $center;
-        $this->bus = $bus;
+        $this->validator = $validator;
     }
 
     /**
-     * @param ConfirmPhone $command
-     * @return mixed
+     * @param CheckVerification $command
+     * @return \Acgn\Center\Models\VerificationToken
+     * @throws \Acgn\Center\Exceptions\HttpTransferException
+     * @throws \Acgn\Center\Exceptions\ParseResponseException
+     * @throws \Acgn\Center\Exceptions\ResponseException
      */
-    public function handle(ConfirmPhone $command)
+    public function handle(CheckVerification $command)
     {
-        $user = $command->actor;
-        $token = $user->getToken()->center_token;
-        $verificationToken = $command->verificationToken;
+        $actor = $command->actor;
+        $data = $command->data;
+
+        $id = (string)array_get($data, 'attributes.id');
+        $verificationCode = (int)array_get($data, 'attributes.verificationCode');
 
         try {
-            $centerUser = $this->center->updateUserPhone($token, $user->id, $verificationToken);
+            $res = $this->center->resources()->verifications($id)->token()->get($verificationCode);
         } catch (InvalidParamsResponseException $e) {
             $errors = $e->getErrors();
             $validator = $this->validator->make([], []);
@@ -79,8 +71,6 @@ class ConfirmPhoneHandler
             throw new ValidationException($validator);
         }
 
-        return $this->bus->dispatch(
-            new UpdateUser($user, $centerUser)
-        );
+        return $res;
     }
 }

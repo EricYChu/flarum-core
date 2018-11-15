@@ -11,8 +11,11 @@
 
 namespace Flarum\Api\Controller;
 
+use Flarum\Core\CenterService\CenterService;
+use Flarum\Core\Command\CreateUser;
 use Flarum\Core\Exception\PermissionDeniedException;
 use Flarum\Core\Repository\UserRepository;
+use Flarum\Core\User;
 use Flarum\Http\AccessToken;
 use Flarum\Http\Controller\ControllerInterface;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
@@ -38,15 +41,22 @@ class TokenController implements ControllerInterface
     protected $events;
 
     /**
+     * @var CenterService
+     */
+    protected $center;
+
+    /**
      * @param UserRepository $users
      * @param BusDispatcher $bus
      * @param EventDispatcher $events
+     * @param CenterService $center
      */
-    public function __construct(UserRepository $users, BusDispatcher $bus, EventDispatcher $events)
+    public function __construct(UserRepository $users, BusDispatcher $bus, EventDispatcher $events, CenterService $center)
     {
         $this->users = $users;
         $this->bus = $bus;
         $this->events = $events;
+        $this->center = $center;
     }
 
     /**
@@ -54,19 +64,29 @@ class TokenController implements ControllerInterface
      */
     public function handle(ServerRequestInterface $request)
     {
+        $actor = $request->getAttribute('actor');
         $body = $request->getParsedBody();
 
         $identification = array_get($body, 'identification');
         $password = array_get($body, 'password');
         $lifetime = array_get($body, 'lifetime', 3600);
 
-        $user = $this->users->findByIdentification($identification);
-
-        if (! $user || ! $user->checkPassword($password)) {
+        try {
+            $auth = $this->center->signIn($identification, $password);
+            $centerUser = $auth->user;
+        } catch (\Throwable $e) {
             throw new PermissionDeniedException;
         }
 
-        $token = AccessToken::generate($user->id, $lifetime);
+        $user = User::query()->find($centerUser->id);
+
+        if (empty($user)) {
+            $user = $this->bus->dispatch(
+                new CreateUser($actor, $centerUser)
+            );
+        }
+
+        $token = AccessToken::generate($auth, $lifetime);
         $token->save();
 
         return new JsonResponse([

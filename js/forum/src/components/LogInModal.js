@@ -1,11 +1,10 @@
 import Modal from 'flarum/components/Modal';
-import ForgotPasswordModal from 'flarum/components/ForgotPasswordModal';
 import SignUpModal from 'flarum/components/SignUpModal';
-import Alert from 'flarum/components/Alert';
 import Button from 'flarum/components/Button';
 import LogInButtons from 'flarum/components/LogInButtons';
 import extractText from 'flarum/utils/extractText';
 import callingCodes from 'flarum/utils/callingCodes';
+import ResetPasswordConfirmationModal from "flarum/components/ResetPasswordConfirmationModal";
 
 /**
  * The `LogInModal` component displays a modal dialog with a login form.
@@ -110,7 +109,7 @@ export default class LogInModal extends Modal {
     const phone = this.identification();
     const props = phone.indexOf('@') !== -1 ? {phone} : undefined;
 
-    app.modal.show(new ForgotPasswordModal(props));
+    app.modal.show(new ResetPasswordConfirmationModal(props));
   }
 
   /**

@@ -169,6 +169,7 @@ export default class CommentPost extends Post {
 
   translate() {
     const contentHtml = this.props.post.contentHtml();
+    this.loading = true;
     $.ajax({
         method: 'POST',
         url: 'https://translator-api.acgn.io/',
@@ -181,6 +182,7 @@ export default class CommentPost extends Post {
       .done(msg => {
         this.translatation = msg[0];
         this.showTranslatation = true;
+        this.loading = false;
         m.redraw();
       });
   }
@@ -202,7 +204,7 @@ export default class CommentPost extends Post {
             }
           }
         }
-      })
+      }), -100
     );
     return items;
   }

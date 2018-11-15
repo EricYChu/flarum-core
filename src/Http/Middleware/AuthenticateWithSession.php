@@ -30,6 +30,7 @@ class AuthenticateWithSession implements MiddlewareInterface
         $actor = $this->getActor($session);
 
         $actor->setSession($session);
+        $actor->setToken($session->get('token'));
 
         $request = $request->withAttribute('actor', $actor);
 

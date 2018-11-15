@@ -11,128 +11,53 @@
 
 namespace Flarum\Core\Command;
 
-use Exception;
-use Flarum\Core\Access\AssertPermissionTrait;
-use Flarum\Core\AuthToken;
-use Flarum\Core\Exception\PermissionDeniedException;
-use Flarum\Core\PhoneVerification\PhoneVerification;
-use Flarum\Core\Repository\UserRepository;
+use Flarum\Core\CenterService\CenterService;
 use Flarum\Core\Support\DispatchEventsTrait;
-use Flarum\Core\User;
-use Flarum\Core\Validator\ResetPasswordValidator;
-use Flarum\Core\Validator\UserValidator;
-use Flarum\Event\UserWillBeSaved;
-use Flarum\Foundation\Application;
-use Flarum\Settings\SettingsRepositoryInterface;
-use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Validation\Factory;
-use Illuminate\Contracts\Validation\ValidationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Validator;
-use Intervention\Image\ImageManager;
-use League\Flysystem\Adapter\Local;
-use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemInterface;
-use League\Flysystem\MountManager;
-use Symfony\Component\Translation\TranslatorInterface;
+use Illuminate\Contracts\Bus\Dispatcher as Bus;
 
 class ResetPasswordHandler
 {
     use DispatchEventsTrait;
-    use AssertPermissionTrait;
 
     /**
-     * @var UserValidator
+     * @var CenterService
      */
-    protected $validator;
+    protected $center;
 
     /**
-     * @var Application
+     * @var Bus
      */
-    protected $app;
+    protected $bus;
 
     /**
-     * @var Factory
+     * @param CenterService $center
+     * @param Bus $bus
      */
-    private $validatorFactory;
-
-    /**
-     * @var TranslatorInterface
-     */
-    protected $translator;
-
-    /**
-     * @var UserRepository
-     */
-    protected $users;
-
-    /**
-     * @var PhoneVerification
-     */
-    protected $phoneVerification;
-
-    /**
-     * @param Dispatcher $events
-     * @param ResetPasswordValidator $validator
-     * @param Application $app
-     * @param Factory $validatorFactory
-     * @param TranslatorInterface $translator
-     * @param UserRepository $users
-     * @param PhoneVerification $phoneVerification
-     */
-    public function __construct(Dispatcher $events, ResetPasswordValidator $validator, Application $app, Factory $validatorFactory, TranslatorInterface $translator, UserRepository $users, PhoneVerification $phoneVerification)
+    public function __construct(CenterService $center, Bus $bus)
     {
-        $this->events = $events;
-        $this->validator = $validator;
-        $this->app = $app;
-        $this->validatorFactory = $validatorFactory;
-        $this->translator = $translator;
-        $this->users = $users;
-        $this->phoneVerification = $phoneVerification;
+        $this->center = $center;
+        $this->bus = $bus;
     }
 
     /**
      * @param ResetPassword $command
-     * @return User
-     * @throws ValidationException
+     * @return mixed
+     * @throws \Acgn\Center\Exceptions\HttpTransferException
+     * @throws \Acgn\Center\Exceptions\ParseResponseException
+     * @throws \Acgn\Center\Exceptions\ResponseException
      */
     public function handle(ResetPassword $command)
     {
         $actor = $command->actor;
         $data = $command->data;
 
-        $phone = array_get($data, 'attributes.phone');
+        $verificationToken = array_get($data, 'attributes.verificationToken');
         $password = array_get($data, 'attributes.password');
-        $passwordConfirmation = array_get($data, 'attributes.password_confirmation');
-        $verificationCode = array_get($data, 'attributes.verification_code');
 
-        $validator = $this->validator->makeValidator([
-            'phone' => $phone,
-            'password' => $password,
-            'password_confirmation' => $passwordConfirmation,
-            'verificationCode' => $verificationCode,
-        ]);
+        $centerUser = $this->center->resetUserPassword((string)$verificationToken, (string)$password);
 
-        $validator->after(function (Validator $validator) use ($actor, $phone, $verificationCode) {
-            if ($validator->errors()->isEmpty()) {
-                $this->phoneVerification->check($actor, $phone, $verificationCode);
-            }
-        });
-
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-
-        $user = $this->users->findByPhone($phone);
-
-        if (! $user) {
-            throw new ModelNotFoundException;
-        }
-
-        $user->changePassword($password);
-        $user->save();
-
-        return $user;
+        return $this->bus->dispatch(
+            new UpdateUser($actor, $centerUser)
+        );
     }
 }

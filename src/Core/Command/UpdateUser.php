@@ -12,30 +12,27 @@
 namespace Flarum\Core\Command;
 
 use Flarum\Core\User;
+use Acgn\Center\Models\User as CenterUser;
 
-class CheckPhoneVerification
+class UpdateUser
 {
     /**
-     * The user performing the action.
-     *
      * @var User
      */
     public $actor;
 
     /**
-     * The attributes of the new user.
-     *
-     * @var array
+     * @var CenterUser
      */
-    public $data;
+    public $centerUser;
 
     /**
-     * @param User $actor The user performing the action.
-     * @param array $data The attributes of the new user.
+     * @param User $actor
+     * @param CenterUser $centerUser
      */
-    public function __construct(User $actor, array $data)
+    public function __construct(User $actor, CenterUser $centerUser)
     {
         $this->actor = $actor;
-        $this->data = $data;
+        $this->centerUser = $centerUser;
     }
 }

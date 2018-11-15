@@ -22,7 +22,7 @@ export default class ChangePasswordModal extends Modal {
      *
      * @type {function}
      */
-    this.oldPassword = m.prop('');
+    this.currentPassword = m.prop('');
 
     /**
      * The value of the password input.
@@ -68,19 +68,17 @@ export default class ChangePasswordModal extends Modal {
       <div className="Modal-body">
         <div className="Form Form--centered">
           <div className="Form-group">
+            <input className="FormControl" name="currentPassword" type="password" placeholder={extractText(app.translator.trans('core.forum.change_password.old_password_placeholder'))}
+                   bidi={this.currentPassword}
+                   required={true}
+                   disabled={this.loading} />
+          </div>
+          <div className="Form-group">
             <input className="FormControl" name="password" type="password" placeholder={extractText(app.translator.trans('core.forum.change_password.new_password_placeholder'))}
                    bidi={this.password}
                    required={true}
                    disabled={this.loading} />
           </div>
-
-          <div className="Form-group">
-            <input className="FormControl" name="oldPassword" type="password" placeholder={extractText(app.translator.trans('core.forum.change_password.old_password_placeholder'))}
-                   bidi={this.oldPassword}
-                   required={true}
-                   disabled={this.loading} />
-          </div>
-
           <div className="Form-group">
             {Button.component({
               className: 'Button Button--primary Button--block',
@@ -107,13 +105,26 @@ export default class ChangePasswordModal extends Modal {
 
     // if (this.password() !== this.passwordConfirmation()) {
     // }
+    const user = app.session.user;
+    const data = {
+      data: {
+        attributes: {
+          password: this.password()
+        }
+      },
+      meta: {
+        password: this.currentPassword()
+      }
+    };
 
     this.loading = true;
     this.alert = null;
 
-    app.session.user.save({password: this.password()}, {
-        errorHandler: this.onerror.bind(this),
-        meta: {password: this.oldPassword()}
+    app.request({
+        url: app.forum.attribute('apiUrl') + '/users/' + user.id() + '/password',
+        method: 'PUT',
+        data,
+        errorHandler: this.onerror.bind(this)
       })
       .then(() => this.success = true)
       .catch(() => {})

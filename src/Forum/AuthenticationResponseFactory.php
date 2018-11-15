@@ -57,6 +57,7 @@ class AuthenticationResponseFactory
             $session = $request->getAttribute('session');
             $this->authenticator->logIn($session, $user->id);
 
+            // @todo
             $response = $this->rememberer->rememberUser($response, $user->id);
         }
 

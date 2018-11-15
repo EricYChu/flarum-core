@@ -1,78 +1,38 @@
-import Modal from 'flarum/components/Modal';
-import Button from 'flarum/components/Button';
-import extractText from 'flarum/utils/extractText';
-import callingCodes from 'flarum/utils/callingCodes';
+import VerifyPhoneModal from "flarum/components/VerifyPhoneModal";
 
 /**
- * The `ChangePhoneModal` component shows a modal dialog which allows the user
+ * The `ChangePhoneConfirmationModal` component shows a modal dialog which allows the user
  * to change their phone number.
  */
-export default class ChangePhoneModal extends Modal {
+export default class ChangePhoneConfirmationModal extends VerifyPhoneModal {
   init() {
     super.init();
 
-    const {countryCode, phoneNumber} = callingCodes.parsePhone(app.session.user.phone());
+    this.modalTitle(app.translator.trans('core.forum.change_phone.title'));
 
-    /**
-     * Whether or not the phone has been changed successfully.
-     *
-     * @type {Boolean}
-     */
-    this.success = false;
+    this.buttonText = m.prop(app.translator.trans('core.forum.change_phone.verify_button'));
 
-    /**
-     * The value of the country code input.
-     *
-     * @type {Function}
-     */
-    this.countryCode = m.prop(this.props.countryCode || countryCode);
+    this.scene('update_user_phone');
 
-    /**
-     * The value of the phone number input.
-     *
-     * @type {Function}
-     */
-    this.phoneNumber = m.prop(this.props.phoneNumber || phoneNumber);
+    this.countryCode(this.props.countryCode || this.props.prev.countryCode);
 
-    /**
-     * The value of the verification code input.
-     *
-     * @type {Function}
-     */
-    this.verificationCode = m.prop(this.props.verificationCode || '');
+    this.phoneNumber(this.props.phoneNumber || '');
 
-    /**
-     * The value of the password input.
-     *
-     * @type {function}
-     */
-    this.password = m.prop('');
+    this.recaptchaId(this.props.recaptchaId || '');
 
-    /**
-     * The value of the Google reCAPTCHA response.
-     *
-     * @type {Function}
-     */
-    this.recaptchaResponse = m.prop();
+    this.captchaResponse(this.props.captchaResponse || '');
 
-    /**
-     * The id of the Google reCAPTCHA widget.
-     *
-     * @type {Function}
-     */
-    this.recaptchaId = m.prop();
-  }
+    this.verificationId(this.props.verificationId || '');
 
-  className() {
-    return 'ChangePhoneModal Modal--small';
-  }
+    this.verificationCode(this.props.verificationCode || '');
 
-  title() {
-    return app.translator.trans('core.forum.change_phone.title');
+    this.verificationToken(this.props.verificationToken || '');
+
+    this.succeed = false;
   }
 
   content() {
-    if (this.success) {
+    if (this.succeed) {
       return (
         <div className="Modal-body">
           <div className="Form Form--centered">
@@ -87,150 +47,38 @@ export default class ChangePhoneModal extends Modal {
       );
     }
 
-    const items = [];
-
-    callingCodes.items.forEach(item => {
-      items.push(<option value={item.code}>{item.name} (+{item.code})</option>);
-    });
-
-    return (
-      <div className="Modal-body">
-        <div className="Form Form--centered">
-          {this.step === 1 ? [
-            <p className="helpText">{extractText(app.translator.trans('core.lib.phone_verification.verification_text'))}</p>,
-            <div className="Form-group">
-              <select className="FormControl" name="countryCode" value={this.countryCode()}
-                      onchange={m.withAttr('value', this.countryCode)}
-                      required={true}
-                      disabled={this.loading}>
-                {(items)}
-              </select>
-            </div>,
-            <div className="Form-group">
-              <input className="FormControl" name="phoneNumber" type="tel" placeholder={extractText(app.translator.trans('core.lib.phone_verification.phone_number_placeholder'))}
-                     value={this.phoneNumber()}
-                     onchange={m.withAttr('value', this.phoneNumber)}
-                     required={true}
-                     disabled={this.loading} />
-            </div>,
-            <div className="Form-group">
-              <input type="password" name="password" className="FormControl"
-                     placeholder={app.translator.trans('core.forum.change_phone.confirm_password_placeholder')}
-                     bidi={this.password}
-                     required={true}
-                     disabled={this.loading}/>
-            </div>,
-            <div className="Form-group">
-              {Button.component({
-                className: 'Button Button--primary Button--block Button-submit',
-                type: 'button',
-                loading: this.loading,
-                children: app.translator.trans('core.forum.change_phone.submit_button')
-              })}
-            </div>
-            ] : ''},
-
-          {this.step === 2 ? [
-            <div className="Form-group">
-              <p>+{this.countryCode()} {this.phoneNumber()}</p>
-            </div>,
-            <div className="Form-group">
-              <input className="FormControl" name="verificationCode" type="text" placeholder={extractText(app.translator.trans('core.lib.phone_verification.verification_code_placeholder'))}
-                     onchange={m.withAttr('value', this.verificationCode)}
-                     disabled={this.loading} />
-            </div>,
-            <div className="Form-group">
-              {Button.component({
-                className: 'Button Button--primary Button--block',
-                type: 'submit',
-                loading: this.loading,
-                children: app.translator.trans('core.forum.change_phone.verify_button')
-              })}
-            </div>
-          ] : ''}
-        </div>
-      </div>
-    );
+    return super.content();
   }
 
-  config() {
-    const $el = this.$('.Button-submit');
-    if ($el.length && !$el.data('g-rendred')) {
-      this.recaptchaId(grecaptcha.render($el[0], {
-        sitekey: app.forum.attribute('recaptchaSiteKey'),
-        theme: 'light',
-        callback: val => {
-          this.recaptchaResponse(val);
-          this.$('form').submit();
-        },
-      }));
-    }
-    $el.data('g-rendred', true);
-    m.redraw();
-  }
-
-  onsubmit(e) {
-    e.preventDefault();
-
-    const phone = this.phone();
-
-    // If the user hasn't actually entered a different phone address, we don't
-    // need to do anything. Woot!
-    if (phone === app.session.user.phone()) {
-      this.hide();
-      return;
-    }
-
-    // const oldEmail = app.session.user.phone();
-
+  next() {
     this.loading = true;
     this.alert = null;
 
     const data = {
-      phone: phone
+      verificationToken: this.verificationToken()
     };
 
-    if (this.step === 1) {
-      data.recaptchaResponse = this.recaptchaResponse();
-      app.session.user.save(data, {
-          errorHandler: this.onerror.bind(this),
-          meta: {password: this.password()}
-        })
-        .then(() => {
-          this.step++;
+    data.verificationCode = this.verificationCode();
+    app.request({
+        url: app.forum.attribute('baseUrl') + '/confirm/phone',
+        method: 'POST',
+        data,
+        errorHandler: this.onerror.bind(this)
+      })
+      .then(
+        () => {
+          app.session.user.data.attributes.phone = this.phone();
+          app.session.user.data.attributes.countryCode = this.countryCode();
+          app.session.user.data.attributes.phoneNumber = this.phoneNumber();
+          this.succeed = true;
           this.loaded();
-        })
-        .catch(() => {})
-        .then(this.loaded.bind(this));
-    } else {
-      data.verificationCode = this.verificationCode();
-      app.request({
-          url: app.forum.attribute('baseUrl') + '/confirm/phone',
-          method: 'POST',
-          data,
-          errorHandler: this.onerror.bind(this)
-        })
-        .then(
-          () => {
-            app.session.user.data.attributes.phone = phone;
-            this.success = true;
-            this.loaded();
-          },
-          this.loaded.bind(this)
-        );
-    }
+        },
+        this.loaded.bind(this)
+      );
   }
 
-  phone() {
-    return `${this.countryCode()}${this.phoneNumber()}`;
-  }
-
-  onerror(error) {
-    grecaptcha.reset(this.recaptchaId());
-    if (error.status === 401) {
-      error.alert.props.children = app.translator.trans('core.forum.change_phone.incorrect_password_message');
-    }
-
-    super.onerror(error);
+  submitData() {
+    const data = super.submitData();
+    data.verificationToken = this.verificationToken();
   }
 }

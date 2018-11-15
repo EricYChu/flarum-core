@@ -123,6 +123,18 @@ class ApiServiceProvider extends AbstractServiceProvider
             $route->toController(Controller\ForgotPasswordController::class)
         );
 
+        $routes->post(
+            '/verifications',
+            'startVerification',
+            $route->toController(Controller\StartVerificationController::class)
+        );
+
+        $routes->get(
+            '/verifications/{id}/token',
+            'checkVerification',
+            $route->toController(Controller\CheckVerificationController::class)
+        );
+
         /*
         |--------------------------------------------------------------------------
         | Users
@@ -169,6 +181,18 @@ class ApiServiceProvider extends AbstractServiceProvider
             '/users/{id}/avatar',
             'users.avatar.upload',
             $route->toController(Controller\UploadAvatarController::class)
+        );
+
+        $routes->put(
+            '/users/{id}/password',
+            'users.password.update',
+            $route->toController(Controller\UpdateUserPasswordController::class)
+        );
+
+        $routes->put(
+            '/users/{id}/phone',
+            'users.phone.update',
+            $route->toController(Controller\UpdateUserPhoneController::class)
         );
 
         // Remove avatar

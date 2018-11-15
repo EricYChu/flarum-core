@@ -11,27 +11,13 @@
 
 namespace Flarum\Core\Command;
 
-use Exception;
 use Flarum\Core\Access\AssertPermissionTrait;
 use Flarum\Core\Exception\PermissionDeniedException;
-use Flarum\Core\PhoneVerification\PhoneVerification;
 use Flarum\Core\Support\DispatchEventsTrait;
 use Flarum\Core\User;
-use Flarum\Core\Validator\UserValidator;
-use Flarum\Event\UserWillBeSaved;
-use Flarum\Foundation\Application;
 use Flarum\Settings\SettingsRepositoryInterface;
-use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Validation\Factory;
-use Illuminate\Contracts\Validation\ValidationException;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Validator;
-use Intervention\Image\ImageManager;
-use League\Flysystem\Adapter\Local;
-use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemInterface;
-use League\Flysystem\MountManager;
-use Symfony\Component\Translation\TranslatorInterface;
+use Flarum\Core\CenterService\CenterService;
+use Illuminate\Contracts\Bus\Dispatcher;
 
 class RegisterUserHandler
 {
@@ -44,64 +30,34 @@ class RegisterUserHandler
     protected $settings;
 
     /**
-     * @var UserValidator
+     * @var CenterService
      */
-    protected $validator;
+    protected $center;
 
     /**
-     * @var Application
+     * @var Dispatcher
      */
-    protected $app;
+    protected $bus;
 
     /**
-     * @var FilesystemInterface
-     */
-    protected $uploadDir;
-
-    /**
-     * @var Factory
-     */
-    private $validatorFactory;
-
-    /**
-     * @var TranslatorInterface
-     */
-    protected $translator;
-
-    /**
-     * @var PhoneVerification
-     */
-    protected $phoneVerification;
-
-    /**
-     * @param Dispatcher $events
      * @param SettingsRepositoryInterface $settings
-     * @param UserValidator $validator
-     * @param Application $app
-     * @param FilesystemInterface $uploadDir
-     * @param Factory $validatorFactory
-     * @param TranslatorInterface $translator
-     * @param PhoneVerification $phoneVerification
+     * @param CenterService $center
+     * @param Dispatcher $bus
      */
-    public function __construct(Dispatcher $events, SettingsRepositoryInterface $settings, UserValidator $validator, Application $app, FilesystemInterface $uploadDir, Factory $validatorFactory, TranslatorInterface $translator, PhoneVerification $phoneVerification)
+    public function __construct(SettingsRepositoryInterface $settings, CenterService $center, Dispatcher $bus)
     {
-        $this->events = $events;
         $this->settings = $settings;
-        $this->validator = $validator;
-        $this->app = $app;
-        $this->uploadDir = $uploadDir;
-        $this->validatorFactory = $validatorFactory;
-        $this->translator = $translator;
-        $this->phoneVerification = $phoneVerification;
+        $this->center = $center;
+        $this->bus = $bus;
     }
 
     /**
      * @param RegisterUser $command
-     * @throws PermissionDeniedException if signup is closed and the actor is
-     *     not an administrator.
-     * @throws \Flarum\Core\Exception\InvalidConfirmationTokenException if an
-     *     email confirmation token is provided but is invalid.
      * @return User
+     * @throws PermissionDeniedException
+     * @throws \Acgn\Center\Exceptions\HttpTransferException
+     * @throws \Acgn\Center\Exceptions\ParseResponseException
+     * @throws \Acgn\Center\Exceptions\ResponseException
      */
     public function handle(RegisterUser $command)
     {
@@ -112,73 +68,15 @@ class RegisterUserHandler
             $this->assertAdmin($actor);
         }
 
-        $phone = array_get($data, 'attributes.phone');
+        $verificationToken = array_get($data, 'attributes.verificationToken');
         $username = array_get($data, 'attributes.username');
         $password = array_get($data, 'attributes.password');
-        $verificationCode = array_get($data, 'attributes.verificationCode');
+        $email = array_get($data, 'attributes.email');
 
-        $validation = $this->validator->makeValidator(compact('phone', 'username', 'password'));
-        if ($validation->fails()) {
-            throw new ValidationException($validation);
-        }
+        $centerUser = $this->center->signUp($verificationToken, $username, $password, $email);
 
-        $validation = $this->validatorFactory->make(compact('verificationCode'), [
-            'verificationCode' => 'required|digits:6',
-        ]);
-        $validation->after(function (Validator $validator) use ($actor, $phone, $verificationCode) {
-            if ($validator->errors()->isEmpty()) {
-                $this->phoneVerification->check($actor, $phone, $verificationCode);
-            }
-        });
-        if ($validation->fails()) {
-            throw new ValidationException($validation);
-        }
-
-        $user = User::register($username, $phone, $password);
-
-        $this->events->fire(
-            new UserWillBeSaved($user, $actor, $data)
+        return $this->bus->dispatch(
+            new CreateUser($actor, $centerUser)
         );
-
-        if ($avatarUrl = array_get($data, 'attributes.avatarUrl')) {
-            $validation = $this->validatorFactory->make(compact('avatarUrl'), ['avatarUrl' => 'url']);
-
-            if ($validation->fails()) {
-                throw new ValidationException($validation);
-            }
-
-            try {
-                $this->saveAvatarFromUrl($user, $avatarUrl);
-            } catch (Exception $e) {
-                //
-            }
-        }
-
-        $user->activate();
-
-        $user->save();
-
-        $this->dispatchEventsFor($user, $actor);
-
-        return $user;
-    }
-
-    private function saveAvatarFromUrl(User $user, $url)
-    {
-        $tmpFile = tempnam($this->app->storagePath().'/tmp', 'avatar');
-
-        $manager = new ImageManager;
-        $manager->make($url)->fit(100, 100)->save($tmpFile);
-
-        $mount = new MountManager([
-            'source' => new Filesystem(new Local(pathinfo($tmpFile, PATHINFO_DIRNAME))),
-            'target' => $this->uploadDir,
-        ]);
-
-        $uploadName = Str::lower(Str::quickRandom()).'.png';
-
-        $user->changeAvatarPath($uploadName);
-
-        $mount->move('source://'.pathinfo($tmpFile, PATHINFO_BASENAME), "target://$uploadName");
     }
 }

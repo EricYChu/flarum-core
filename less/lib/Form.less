@@ -11,6 +11,7 @@
   text-align: center;
 
   select.FormControl,
+  .FormControl[type=number],
   .FormControl[type=text],
   .FormControl[type=tel],
   .FormControl[type=email],
@@ -25,6 +26,12 @@
     @media @phone {
       font-size: 16px; // minimum font-size required to prevent page zoom on focus in iOS 10
     }
+  }
+
+  .FormControl[type=number]::-webkit-inner-spin-button,
+  .FormControl[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 
   select.FormControl{

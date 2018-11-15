@@ -11,22 +11,17 @@
 
 namespace Flarum\Api\Controller;
 
-use Flarum\Core\Command\ResetPassword;
+use Flarum\Core\Command\CheckVerification;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Psr\Http\Message\ServerRequestInterface;
 use Tobscure\JsonApi\Document;
 
-class ResetPasswordController extends AbstractResourceController
+class CheckVerificationController extends AbstractCreateController
 {
     /**
      * {@inheritdoc}
      */
-    public $serializer = 'Flarum\Api\Serializer\CurrentUserSerializer';
-
-    /**
-     * {@inheritdoc}
-     */
-    public $include = ['groups'];
+    public $serializer = 'Flarum\Api\Serializer\VerificationTokenSerializer';
 
     /**
      * @var Dispatcher
@@ -47,7 +42,12 @@ class ResetPasswordController extends AbstractResourceController
     protected function data(ServerRequestInterface $request, Document $document)
     {
         return $this->bus->dispatch(
-            new ResetPassword($request->getAttribute('actor'), array_get($request->getParsedBody(), 'data', []))
+            new CheckVerification($request->getAttribute('actor'), [
+                'attributes' => [
+                    'id' => array_get($request->getQueryParams(), 'id'),
+                    'verificationCode' => array_get($request->getQueryParams(), 'verificationCode'),
+                ]
+            ])
         );
     }
 }
