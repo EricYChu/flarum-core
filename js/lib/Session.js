@@ -38,6 +38,14 @@ export default class Session {
     }, options));
   }
 
+  intermediateLogin(data, options = {}) {
+    return app.request(Object.assign({
+      method: 'POST',
+      url: app.forum.attribute('baseUrl') + '/intermediateLogin',
+      data
+    }, options));
+  }
+
   /**
    * Log the user out.
    *

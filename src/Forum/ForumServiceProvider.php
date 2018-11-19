@@ -101,6 +101,12 @@ class ForumServiceProvider extends AbstractServiceProvider
         );
 
         $routes->post(
+            '/intermediateLogin',
+            'intermediateLogin',
+            $route->toController(Controller\IntermediateLogInController::class)
+        );
+
+        $routes->post(
             '/register',
             'register',
             $route->toController(Controller\RegisterController::class)

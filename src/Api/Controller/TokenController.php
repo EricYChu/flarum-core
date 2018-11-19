@@ -67,12 +67,17 @@ class TokenController implements ControllerInterface
         $actor = $request->getAttribute('actor');
         $body = $request->getParsedBody();
 
+        $token = array_get($body, 'token');
         $identification = array_get($body, 'identification');
         $password = array_get($body, 'password');
         $lifetime = array_get($body, 'lifetime', 3600);
 
         try {
-            $auth = $this->center->signIn($identification, $password);
+            if (empty($token)) {
+                $auth = $this->center->signIn((string)$identification, (string)$password);
+            } else {
+                $auth = $this->center->intermediateSignIn((string)$token);
+            }
             $centerUser = $auth->user;
         } catch (\Throwable $e) {
             throw new PermissionDeniedException;

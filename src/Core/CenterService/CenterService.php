@@ -151,6 +151,17 @@ class CenterService
         return $res;
     }
 
+    public function intermediateSignIn(string $token)
+    {
+        try {
+            $res = $this->resources()->auth()->exchanges()->create($token);
+        } catch (InvalidParamsResponseException $e) {
+            throw $this->handleInvalidParamsResponseException($e);
+        }
+
+        return $res;
+    }
+
     public function signOut(string $token)
     {
         try {
