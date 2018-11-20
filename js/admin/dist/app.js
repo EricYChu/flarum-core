@@ -21804,6 +21804,26 @@ System.register('flarum/initializers/preload', ['flarum/Session'], function (_ex
     app.forum = app.store.getById('forums', 1);
 
     app.session = new Session(app.store.getById('users', app.data.session.userId), app.data.session.csrfToken);
+
+    if (!app.session.user && (window['_dsbridge'] || window['_dswk']) && window['dsBridge']) {
+      var data = {
+        id: new Date().getTime(),
+        method: 'getIntermediateToken',
+        params: []
+      };
+      // console.info("~~~ ↑ request", JSON.stringify(data));
+      window['dsBridge'].call('acgn.postMsg', JSON.stringify(data), function (response) {
+        // console.info("~~~ ↓ response", response);
+        response = JSON.parse(response);
+        if (response.hasOwnProperty("returns")) {
+          if (Array.isArray(response.returns) && response.returns.length > 0) {
+            app.session.intermediateLogin({ token: response.returns[0], remember: true }).then(function () {
+              return window.location.reload();
+            });
+          }
+        }
+      });
+    }
   }
 
   _export('default', preload);
@@ -22597,6 +22617,17 @@ System.register('flarum/Session', [], function (_export, _context) {
             return app.request(babelHelpers.extends({
               method: 'POST',
               url: app.forum.attribute('baseUrl') + '/login',
+              data: data
+            }, options));
+          }
+        }, {
+          key: 'intermediateLogin',
+          value: function intermediateLogin(data) {
+            var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+            return app.request(babelHelpers.extends({
+              method: 'POST',
+              url: app.forum.attribute('baseUrl') + '/intermediateLogin',
               data: data
             }, options));
           }
