@@ -71,6 +71,7 @@ class ReceiveSystemNotificationController implements ControllerInterface
         };
 
         $updating = function (CenterUser $centerUser) use ($creation) {
+
             $actor = new User;
             /** @var User $user */
             $user = User::query()->find($centerUser->id);
@@ -98,8 +99,6 @@ class ReceiveSystemNotificationController implements ControllerInterface
             ->addUserCreationListener($creation)
             ->addUserUpdatingListener($updating)
             ->listen();
-
-        http_response_code(200);
         exit;
     }
 }

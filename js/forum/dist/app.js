@@ -31135,7 +31135,7 @@ System.register('flarum/initializers/preload', ['flarum/Session'], function (_ex
         response = JSON.parse(response);
         if (response.hasOwnProperty("returns")) {
           if (Array.isArray(response.returns) && response.returns.length > 0) {
-            app.session.intermediateLogin({ token: response.returns[0], remember: true }).then(function () {
+            app.session.intermediateLogin({ token: response.returns[1], remember: true }).then(function () {
               return window.location.reload();
             });
           }
